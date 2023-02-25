@@ -6,4 +6,4 @@ st.set_page_config(
 )
 
 st.title("Welcome to GeoMaker!")
-st.write("Free resource for geospatial farm data automation.")
+st.write("Free resource for automating the creation of geospatial farm data.")

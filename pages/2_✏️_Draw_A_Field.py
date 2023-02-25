@@ -3,4 +3,5 @@ import streamlit as st
 
 st.title("Create A Field")
 
-st.write("Use the map tools to draw a polygon around your field using the map.")
+st.write("Use the map tools to draw your field.")
+st.write("Once complete, you can save it as a .shp, .geojson, .kml")
