@@ -22,5 +22,9 @@ st.title('Map Example')
 # Add a header to the page
 st.header('Boone Pickens Stadium')
 
+# Define the Mapbox tile layer
+mapbox_token = 'pk.eyJ1IjoiZHlsYW56amFtZXMxNCIsImEiOiJjamZ2bXBubzIwdHM1MndteXpkc2V6cTNtIn0.gCwJPHZ_ZCU1DtL2_KGA1w'
+tile_layer = 'mapbox.satellite'
+
 # Use st.map() to display a map of the locations in the dataframe
-st.map(data, zoom=15)
+st.map(data, zoom=15, tiles=tile_layer, mapbox_access_token=mapbox_token)
