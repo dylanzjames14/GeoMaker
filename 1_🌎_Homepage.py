@@ -17,10 +17,10 @@ data = pd.DataFrame({
 })
 
 # Set the page title
-st.set_page_config(page_title='Map Example')
+st.title('Map Example')
 
 # Add a header to the page
-st.header('Map Example')
+st.header('Boone Pickens Stadium')
 
 # Use st.map() to display a map of the locations in the dataframe
 st.map(data, zoom=15)
