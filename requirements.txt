@@ -1,1 +1,7 @@
 streamlit==1.11.0
+folium==0.13.0
+geopandas
+leafmap
+streamlit-folium
+# git+https://github.com/giswqs/leafmap
+# git+https://github.com/giswqs/geemap
