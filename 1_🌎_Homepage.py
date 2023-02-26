@@ -24,8 +24,7 @@ st.header('Boone Pickens Stadium')
 
 # Define the Mapbox tile layer
 mapbox_token = 'pk.eyJ1IjoiZHlsYW56amFtZXMxNCIsImEiOiJjamZ2bXBubzIwdHM1MndteXpkc2V6cTNtIn0.gCwJPHZ_ZCU1DtL2_KGA1w'
-map_style = 'basic-v9'
+style = 'mapbox://styles/mapbox/basic-v9'
 
 # Use st.map() to display a map of the locations in the dataframe
-st.map(data, zoom=15, map_style=map_style, mapbox_access_token=mapbox_token)
-
+st.map(data, zoom=15, style=style, mapbox_access_token=mapbox_token)
