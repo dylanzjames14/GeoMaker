@@ -1,27 +1,10 @@
 import streamlit as st
-import pandas as pd
+import leafmap.foliumap as leafmap
 
-st.set_page_config(
-    page_title="GeoMaker",
-    page_icon="🌎",
-)
-
+st.set_page_config(layout="wide")
 st.title("Welcome to GeoMaker!")
-st.write("Free resource for automating the creation of geospatial farm data.")
+st.write("Free geospatial FMIS data generation.")
 
-# Create a dataframe with some example data
-data = pd.DataFrame({
-    'latitude': [36.1316],
-    'longitude': [-97.0717],
-    'location': ['Boone Pickens Stadium']
-})
+m = leafmap.Map(center=[40, -100], zoom=7, tiles="satellite",attr="Mapbox Attribution")
+m.to_streamlit(height=700)
 
-# Set the page title
-st.title('Map Example')
-
-# Add a header to the page
-st.header('Boone Pickens Stadium')
-
-
-# Use st.map() to display a map of the locations in the dataframe
-st.map(data, zoom=15, tiles="mapbox://styles/dylanzjames14/cjbgn0v4ab3c22smpkuhnvjod")
