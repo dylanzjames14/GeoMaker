@@ -24,4 +24,4 @@ st.header('Boone Pickens Stadium')
 
 
 # Use st.map() to display a map of the locations in the dataframe
-st.map(data, zoom=15,)
+st.map(data, zoom=15, tiles="mapbox://styles/dylanzjames14/cjbgn0v4ab3c22smpkuhnvjod",attr="Mapbox attribution"))
