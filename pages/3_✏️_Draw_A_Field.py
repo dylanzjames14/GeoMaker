@@ -18,6 +18,6 @@ m = leafmap.Map(google_map="hybrid",center=[36.1256, -97.0665], zoom=10,draw_con
 draw_control = Draw(export=True,filename="boundary.geojson", draw_options={"marker":False, "polyline":False, "circlemarker":False})
 draw_control.add_to(m)
 
-m.to_streamlit(height=600, width=1150)
+m.to_streamlit(height=550, width=1150)
 
 
