@@ -8,6 +8,7 @@ import folium
 import leafmap.foliumap as leafmap
 from folium.plugins import Draw
 
+st.set_page_config(layout="wide")
 st.title("Draw A Field")
 st.write("1. Use the map tools to locate your field. *You may pan or use the search function*.")
 st.write("2. Once you've located your field, use the draw tools to draw around your field.")
