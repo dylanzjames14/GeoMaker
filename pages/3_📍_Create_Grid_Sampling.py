@@ -8,6 +8,8 @@ import folium
 import leafmap.foliumap as leafmap
 from folium.plugins import Draw
 
+
+st.info("This app is under construction, but have feel free to have a play with the map!")
 st.title("Create Grid Sampling")
 st.write("This tool will allow you to configure a sampling scheme for a provided field and save it as a shapefile which may be imported in to Sirrus!")
 
