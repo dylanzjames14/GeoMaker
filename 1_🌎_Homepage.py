@@ -1,10 +1,15 @@
 import streamlit as st
-import folium
 import leafmap.foliumap as leafmap
 
 st.set_page_config(layout="wide")
 st.title("Welcome to GeoMaker!")
-st.write("Free geospatial FMIS data generation.")
+st.write("Geomaker is a tool for generating precision ag data! The goal of this site is to make it simple to produce test data anywhere on the planet.")
 
-m = leafmap.Map(google_map="hybrid",center=[36.1627, -97.0872], zoom=15,)
-m.to_streamlit(height=700)
+row1_col1, row1_col2 = st.columns(2)
+with row1_col1:
+    st.image("https://github.com/giswqs/data/raw/main/timelapse/spain.gif")
+    st.image("https://github.com/giswqs/data/raw/main/timelapse/las_vegas.gif")
+
+with row1_col2:
+    st.image("https://github.com/giswqs/data/raw/main/timelapse/goes.gif")
+    st.image("https://github.com/giswqs/data/raw/main/timelapse/fire.gif")
