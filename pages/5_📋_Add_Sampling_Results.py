@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 st.info("This app is under construction, but enjoy reviewing the randomized sample results")
-st.title("Create A Modus File")
+st.title("Add Sampling Results")
 st.write("Create a Modus results XML file with specified sample IDs")
 
 
