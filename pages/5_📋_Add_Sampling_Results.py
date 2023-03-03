@@ -3,14 +3,21 @@ import pandas as pd
 
 st.info("This app is under construction, but enjoy reviewing the randomized sample results")
 st.title("Add Sampling Results")
-st.write("Create a Modus results XML file with specified sample IDs")
 
+# Radio button to select between LBS and PPM
+unit = st.radio("Select the unit of measurement", ('LBS', 'PPM'))
 
-# Use the "../" notation to navigate to the parent directory
-file_path = "Data/Mock Soil Test Data.xlsx"
+# Slider to select the range of rows to display
+num_rows = st.slider("Select the number of rows to display", 1, 100)
 
-# Read the Excel file into a pandas DataFrame
-df = pd.read_excel(file_path)
+# CSV file path based on the selected unit of measurement
+if unit == 'LBS':
+    file_path = "Data/sample_data_lbs.csv"
+else:
+    file_path = "Data/sample_data_ppm.csv"
+
+# Read the CSV file into a pandas DataFrame
+df = pd.read_csv(file_path, nrows=num_rows+1)
 
 # Display the DataFrame on the page
-st.write(df)
+st.write(df.head(num_rows))
