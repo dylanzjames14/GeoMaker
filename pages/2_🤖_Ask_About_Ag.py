@@ -7,7 +7,7 @@ st.write("This is a tool to help build your agricultural knowledge.")
 
 openai.api_key = st.secrets["api_secret"]
 
-article_text = st.text_area("Enter your agricultural topic", max_chars=30)
+article_text = st.text_area("Enter your topic (30 characters max):", max_chars=30)
 
 if st.button("Learn!"):
     # Use GPT-3 to generate a summary of the article
