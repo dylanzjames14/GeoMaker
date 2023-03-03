@@ -9,7 +9,7 @@ openai.api_key = st.secrets['openai']
 
 article_text = st.text_area("Enter your agricultural topic", max_chars=30)
 
-if st.button("Generate Summary", type='primary'):
+if st.button("Generate Summary"):
     # Use GPT-3 to generate a summary of the article
     response = openai.Completion.create(
         engine="text-davinci-003",
