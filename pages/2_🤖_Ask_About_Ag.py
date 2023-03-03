@@ -1,9 +1,9 @@
 import streamlit as st
 import openai
 
-st.warning("This is a beta free service, please limit yourself to 3 summaries per day. Inputs are the at the discretion of the user and are not being monitored.")
+st.warning("This is a beta free service, please limit yourself to 3 topics per day.")
 st.title("Ask About Ag")
-st.write("This a place to help gain understanding of the agricultural industry.")
+st.write("This is a tool to help build your agricultural knowledge.")
 
 openai.api_key = st.secrets["api_secret"]
 
