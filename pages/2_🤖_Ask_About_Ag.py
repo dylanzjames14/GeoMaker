@@ -5,7 +5,7 @@ st.warning("This is a beta free service, please limit yourself to 3 summaries pe
 st.title("Ask About Ag")
 st.write("This a place to help gain understanding of the agricultural industry.")
 
-openai_api_key = st.secrets['openai']["OPENAI_API_KEY"]
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 article_text = st.text_area("Enter your agricultural topic", max_chars=30)
 
