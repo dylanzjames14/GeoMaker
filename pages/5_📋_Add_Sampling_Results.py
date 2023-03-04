@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import base64
 
 st.info("This app is under construction, but enjoy reviewing the randomized sample results")
 st.title("Add Sampling Results")
@@ -21,3 +22,9 @@ df = pd.read_csv(file_path, nrows=num_rows+1)
 
 # Display the DataFrame on the page
 st.write(df.head(num_rows))
+
+# Save CSV button
+csv = df.to_csv(index=False)
+b64 = base64.b64encode(csv.encode()).decode()
+href = f'<a href="data:file/csv;base64,{b64}" download="sample_data.csv">Download CSV</a>'
+st.markdown(href, unsafe_allow_html=True)
