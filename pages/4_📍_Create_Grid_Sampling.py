@@ -9,7 +9,7 @@ import leafmap.foliumap as leafmap
 from folium.plugins import Draw
 
 
-st.info("This app is under construction, but have feel free to have a play with the map!")
+st.info("This app is under construction, but have a play with the map!")
 st.title("Create Grid Sampling")
 st.write("This tool will allow you to configure a sampling scheme and save it as a shapefile.")
 
