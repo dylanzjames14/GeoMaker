@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.info("This app is under construction, but enjoy reviewing the randomized sample results")
+st.info("This app is under construction.")
 st.title("Generate Modus Sampling Results")
 
 # Create 3 columns to hold the radio buttons for selecting the analysis and depth units
