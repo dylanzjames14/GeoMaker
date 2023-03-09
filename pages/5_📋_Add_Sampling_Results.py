@@ -51,3 +51,14 @@ if num_depths > 0:
                 prev_max_depth = max_depths[i-1]
                 max_depth = st.number_input(f"Depth {i} ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
                 max_depths[i] = max_depth
+                
+# Display the resulting DataFrame if the form has been submitted
+        st.write("---")
+        st.write("Sample Results")
+        st.write("min_sample_id:", min_sample_id)
+        st.write("max_sample_id:", max_sample_id)
+        st.write("unit:", unit)
+        st.write("depth_unit:", depth_unit)
+        st.write("num_depths:", num_depths)
+        st.write("max_depths:", max_depths)
+        st.write("previous value:",prev_max_depth)
