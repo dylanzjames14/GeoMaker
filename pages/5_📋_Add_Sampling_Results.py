@@ -26,31 +26,32 @@ default_depths = [0, 6, 12, 18, 24, 30, 36]
 # Create an empty list to store the maximum depths
 max_depths = [0.0]
 
+# Initialize list to store depth references
+depth_refs = []
+
 # Input boxes for the maximum depth for topsoil and subsoils
 cols = st.columns(num_depths + 1)
-with cols[0]:
-    st.write(f'<span style="color: #f67b21">Topsoil</span>', unsafe_allow_html=True)
-    if depth_unit == "Inches":
-        max_depth = st.number_input(f"Topsoil depth ({depth_unit}):", key=f"max_depth_0", value=default_depths[1])
-    else:
-        max_depth = st.number_input(f"Topsoil depth ({depth_unit}):", key=f"max_depth_0", value=default_depths[1])
-    max_depths.append(max_depth)
-
-if num_depths > 0:
-    for i in range(1, num_depths+1):
-        with cols[i]:
+for i in range(num_depths + 1):
+    with cols[i]:
+        if i == 0:
+            st.write(f'<span style="color: #f67b21">Topsoil</span>', unsafe_allow_html=True)
+        else:
             st.write(f'<span style="color: #f67b21">Subsoil {i}</span>', unsafe_allow_html=True)
-            if depth_unit == "Inches":
-                prev_max_depth = max_depths[i-1]
-                max_depth = st.number_input(f"Depth ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
-                max_depths.append(max_depth)
-            else:
-                prev_max_depth = max_depths[i-1]
-                max_depth = st.number_input(f"Depth {i} ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
-                max_depths[i] = max_depth
+        if depth_unit == "Inches":
+            max_depth = st.number_input(f"Depth ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
+        else:
+            max_depth = st.number_input(f"Depth {i} ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
+        max_depths.append(max_depth)
+        depth_refs.append({
+            "DepthID": i+1 if i > 0 else 1,
+            "StartingDepth": max_depths[i],
+            "EndingDepth": max_depth,
+            "ColumnDepth": max_depth - max_depths[i],
+            "DepthUnit": depth_unit.lower()
+        })
 
 
-   # Display the resulting DataFrame if the form has been submitted
+# Display the resulting DataFrame if the form has been submitted
 st.write("---")
 st.write("Sample Results")
 st.write("min_sample_id:", min_sample_id)
@@ -59,3 +60,20 @@ st.write("unit:", unit)
 st.write("depth_unit:", depth_unit)
 st.write("num_depths:", num_depths)
 st.write("max_depths:", max_depths[1:])
+
+# Display depth references
+st.write("---")
+st.write("Depth References")
+for i, depth_ref in enumerate(depth_refs):
+    depth_id = i + 1
+    if i == 0:
+        depth_id = 1
+    st.write(f"<DepthRefs>\n"
+             f"  <DepthRef DepthID=\"{depth_id}\">\n"
+             f"    <Name>not provided</Name>\n"
+             f"    <StartingDepth>{depth_ref['StartingDepth']}</StartingDepth>\n"
+             f"    <EndingDepth>{depth_ref['EndingDepth']}</EndingDepth>\n"
+             f"    <ColumnDepth>{depth_ref['ColumnDepth']}</ColumnDepth>\n"
+             f"    <DepthUnit>{depth_ref['DepthUnit']}</DepthUnit>\n"
+             f"  </DepthRef>\n"
+             f"</DepthRefs>\n")
