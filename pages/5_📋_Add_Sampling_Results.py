@@ -1,61 +1,53 @@
 import streamlit as st
-import pandas as pd
-import base64
 
 st.info("This app is under construction, but enjoy reviewing the randomized sample results")
 st.title("Generate Modus Sampling Results")
 
-# Create two empty columns to position the radio selections
-col1, col2, *_ = st.columns([3, 1, 6])
+# Create two columns to hold the radio buttons for selecting the analysis and depth units
+col1, col2 = st.columns(2)
 
 # Radio button to select between LBS and PPM
 with col1:
-    unit = st.radio("Analysis recorded in:", ('LBS', 'PPM'))
+    unit = st.radio("Analysis units:", ('LBS', 'PPM'))
 
 # Radio button to select depth units
 with col2:
-    depth_unit = st.radio("Select depth units:", ("Inches", "Centimeters"))
+    depth_unit = st.radio("Depth units:", ("Inches", "Centimeters"))
+
+# Range sliders for setting min and max range of sample IDs
+min_sample_id, max_sample_id = st.slider("Set SampleID range", 1, 500, (1, 500), 1)
 
 # Dropdown to select the number of depths sampled
-num_depths = st.selectbox("Select # of depths sampled:", [1, 2, 3, 4, 5])
+num_depths = st.selectbox("Unique depths collected at each sample", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
 
 # Create an empty list to store the maximum depths
-max_depths = []
+max_depths = [0.0]
 
-# Input boxes for the maximum depth for each sample
-num_cols = min(num_depths, 20)
-col_width = int(12/num_cols)
-cols = st.columns(num_cols)
-for i in range(num_depths):
-    with cols[i % num_cols]:
-        st.write(f'<span style="color: green">Sample {i+1}</span>', unsafe_allow_html=True)
-        if depth_unit == "inches":
-            max_depth = st.number_input(f"Max depth for sample {i+1} ({depth_unit}):", key=f"max_depth_{i}", value=0.0, min_value=None, max_value=None, step=0.1)
-        else:
-            max_depth = st.number_input(f"Max depth for sample {i+1} ({depth_unit}):", key=f"max_depth_{i}", value=0.0, min_value=None, max_value=None, step=0.01)
-        max_depths.append(max_depth)
+# Create a list of default maximum depths
+default_depths = [0, 6, 12, 18, 24, 30, 36]
 
-# CSV file path based on the selected unit of measurement
-if unit == 'LBS':
-    file_path = "Data/lbs.csv"
-else:
-    file_path = "Data/ppm.csv"
+# Create an empty list to store the maximum depths
+max_depths = [0.0]
 
-# Read the CSV file into a pandas DataFrame
-df = pd.read_csv(file_path)
+# Input boxes for the maximum depth for topsoil and subsoils
+cols = st.columns(num_depths + 1)
+with cols[0]:
+    st.write(f'<span style="color: blue">Topsoil</span>', unsafe_allow_html=True)
+    if depth_unit == "Inches":
+        max_depth = st.number_input(f"Topsoil depth ({depth_unit}):", key=f"max_depth_0", value=default_depths[1])
+    else:
+        max_depth = st.number_input(f"Topsoil depth ({depth_unit}):", key=f"max_depth_0", value=default_depths[1])
+    max_depths.append(max_depth)
 
-# Repeat rows based on the selected number of depths sampled
-df = pd.concat([df]*num_depths, ignore_index=True)
-
-# Add the depth ID column to the DataFrame
-depth_ids = [i%num_depths+1 for i in range(df.shape[0])]
-df.insert(0, "DepthID", depth_ids)
-
-# Save CSV button
-csv = df.to_csv(index=False)
-b64 = base64.b64encode(csv.encode()).decode()
-href = f'<a href="data:file/csv;base64,{b64}" download="sample_data.csv">Download CSV</a>'
-
-# Display the DataFrame and the download link
-st.write(df)
-st.markdown(href, unsafe_allow_html=True)
+if num_depths > 0:
+    for i in range(1, num_depths+1):
+        with cols[i]:
+            st.write(f'<span style="color: blue">Subsoil {i}</span>', unsafe_allow_html=True)
+            if depth_unit == "Inches":
+                prev_max_depth = max_depths[i-1]
+                max_depth = st.number_input(f"Depth ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
+                max_depths.append(max_depth)
+            else:
+                prev_max_depth = max_depths[i-1]
+                max_depth = st.number_input(f"Depth {i} ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
+                max_depths[i] = max_depth
