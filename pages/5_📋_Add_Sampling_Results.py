@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import datetime
 
 st.info("This app is under construction.")
 st.title("Generate Modus Sampling Results")
@@ -22,10 +23,10 @@ else:
     soil_test_data = pd.read_excel("Data/ppmSoilTest.xlsx")
 
 # Range sliders for setting min and max range of sample IDs
-min_sample_id, max_sample_id = st.slider("Set SampleID range", 1, 500, (1, 500), 1)
+min_sample_id, max_sample_id = st.slider("Set sample range", 1, 500, (1, 500), 1)
 
-# Filter soil test data based on SampleID range
-soil_test_data = soil_test_data[(soil_test_data.SampleID >= min_sample_id) & (soil_test_data.SampleID <= max_sample_id)]
+# Filter soil test data based on Sample range
+soil_test_data = soil_test_data[(soil_test_data.SampleNumber >= min_sample_id) & (soil_test_data.SampleNumber <= max_sample_id)]
 
 # Dropdown to select the number of depths sampled
 num_depths = st.selectbox("Unique depths collected at each sample", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
@@ -64,26 +65,73 @@ for i in range(num_depths + 1):
 # Display filtered soil test data, hiding columns with missing values
 st.write("---")
 st.write("Soil Test Data")
-filtered_soil_test_data = soil_test_data[(soil_test_data['SampleID'] >= min_sample_id) & (soil_test_data['SampleID'] <= max_sample_id)]
+filtered_soil_test_data = soil_test_data[(soil_test_data['SampleNumber'] >= min_sample_id) & (soil_test_data['SampleNumber'] <= max_sample_id)]
 filtered_soil_test_data = filtered_soil_test_data.drop(columns=['ID'], errors='ignore')  # Drop the 'ID' column if it exists
 filtered_soil_test_data = filtered_soil_test_data.dropna(axis=1, how='all')  # Drop columns with all missing values
-st.dataframe(filtered_soil_test_data)
+st.experimental_data_editor(filtered_soil_test_data)
 
-# Display depth references
+# Display depth references and corresponding XML strings for each sample
 st.write("---")
-st.write("Depth References")
-for i, depth_ref in enumerate(depth_refs):
-    depth_id = i + 1
-    if i == 0:
-        depth_id = 1
-    st.write(f"<DepthRefs>\n"
-             f"  <DepthRef DepthID=\"{depth_id}\">\n"
-             f"    <Name>not provided</Name>\n"
-             f"    <StartingDepth>{depth_ref['StartingDepth']}</StartingDepth>\n"
-             f"    <EndingDepth>{depth_ref['EndingDepth']}</EndingDepth>\n"
-             f"    <ColumnDepth>{depth_ref['ColumnDepth']}</ColumnDepth>\n"
-             f"    <DepthUnit>{depth_ref['DepthUnit']}</DepthUnit>\n"
-             f"  </DepthRef>\n"
-             f"</DepthRefs>\n")
+st.write("Depth References and XML Strings")
 
+# ModusResult metadata
+event_date = str(datetime.date.today())
+expiration_date = str(datetime.date.today() + datetime.timedelta(days=7))
+received_date = str(datetime.date.today())
+processed_date = str(datetime.date.today())
+
+# Initialize xml_strings for all samples
+xml_strings = ""
+
+# Generate ModusResult metadata
+modus_result_metadata = "<ModusResult xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" Version=\"1.0\" xsi:noNamespaceSchemaLocation=\"modus_result.xsd\">\n"
+modus_result_metadata += "<Event>\n"
+modus_result_metadata += "<EventMetaData>\n"
+modus_result_metadata += "<EventCode>1234-ABCD</EventCode>\n"
+modus_result_metadata += f"<EventDate>{event_date}</EventDate>\n"
+modus_result_metadata += "<EventType>\n<Soil/>\n</EventType>\n"
+modus_result_metadata += f"<EventExpirationDate>{expiration_date}</EventExpirationDate>\n"
+modus_result_metadata += "</EventMetaData>\n"
+modus_result_metadata += "<LabMetaData>\n"
+modus_result_metadata += "<LabName>GeoMaker Analytical</LabName>\n"
+modus_result_metadata += "<LabID>1234567</LabID>\n"
+modus_result_metadata += "<TestPackageRefs>\n"
+modus_result_metadata += "<TestPackageRef TestPackageID=\"1\">\n"
+modus_result_metadata += "<Name>Gold Package</Name>\n"
+modus_result_metadata += "<LabBillingCode>1234567</LabBillingCode>\n"
+modus_result_metadata += "</TestPackageRef>\n"
+modus_result_metadata += "</TestPackageRefs>\n"
+modus_result_metadata += f"<ReceivedDate>{received_date}T00:00:00-06:00</ReceivedDate>\n"
+modus_result_metadata += f"<ProcessedDate>{processed_date}T00:00:00-06:00</ProcessedDate>\n"
+modus_result_metadata += "<Reports></Reports>\n"
+modus_result_metadata += "</LabMetaData>\n"
+modus_result_metadata += "</Event>\n"
+modus_result_metadata += "</ModusResult>\n"
+
+# Add ModusResult metadata to xml_strings
+xml_strings += modus_result_metadata
+
+# Iterate over rows in filtered_soil_test_data
+for index, row in filtered_soil_test_data.iterrows():
+    # Sample metadata
+    sample_id = row['SampleNumber']
+
+    # Generate XML string for current sample
+    xml_string = "<Sample>\n"
+    xml_string += f"  <SampleNumber>{sample_id}</SampleNumber>\n"
+    xml_string += f"  <ValueUnit>{unit}</ValueUnit>\n"
+
+    # Depth references for current sample
+    for depth_ref in depth_refs:
+        column_name = f"{depth_ref['StartingDepth']} - {depth_ref['EndingDepth']}"
+        xml_string += f"  <DepthRef DepthID=\"{depth_ref['DepthID']}\">\n"
+        xml_string += f"  </DepthRef>\n"
+    
+    xml_string += "</Sample>\n"
+    xml_strings += xml_string
+
+# Display depth references and corresponding XML strings for all samples
+st.write("---")
+st.write("Depth References and XML Strings")
+st.write(xml_strings)
 
