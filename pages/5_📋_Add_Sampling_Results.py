@@ -70,7 +70,7 @@ filtered_soil_test_data = filtered_soil_test_data.drop(columns=['ID'], errors='i
 filtered_soil_test_data = filtered_soil_test_data.dropna(axis=1, how='all')  # Drop columns with all missing values
 st.experimental_data_editor(filtered_soil_test_data)
 
-# Display depth references and corresponding XML strings for each sample
+# Display depth references and corresponding XML strings for all samples
 st.write("---")
 st.write("Depth References and XML Strings")
 
@@ -127,8 +127,23 @@ for index, row in filtered_soil_test_data.iterrows():
         xml_string += f"  <DepthRef DepthID=\"{depth_ref['DepthID']}\">\n"
         xml_string += f"  </DepthRef>\n"
     
+    # Nutrient results for current sample
+    for nutrient in soil_test_data.columns:
+        if nutrient not in ['ID', 'SampleNumber']:
+            nutrient_value = row[nutrient]
+            nutrient_unit = unit.lower() if unit == 'PPM' else 'lbs/acre'
+            xml_string += f" <Element>{nutrient}</Element>\n"
+
     xml_string += "</Sample>\n"
     xml_strings += xml_string
 
-# Display depth references and corresponding XML strings for all samples
-st.write(xml_strings)
+print(xml_strings)
+
+# Display the XML strings
+st.code(xml_strings, language='xml')
+
+
+
+
+
+
