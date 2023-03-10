@@ -23,7 +23,7 @@ else:
     soil_test_data = pd.read_excel("Data/ppmSoilTest.xlsx")
 
 # Range sliders for setting min and max range of sample IDs
-min_sample_id, max_sample_id = st.slider("Set sample range", 1, 500, (1, 500), 1)
+min_sample_id, max_sample_id = st.slider("Set sample range", 1, 500, (1, 30), 1)
 
 # Filter soil test data based on Sample range
 soil_test_data = soil_test_data[(soil_test_data.SampleNumber >= min_sample_id) & (soil_test_data.SampleNumber <= max_sample_id)]
@@ -133,6 +133,66 @@ for index, row in filtered_soil_test_data.iterrows():
             nutrient_value = row[nutrient]
             nutrient_unit = unit.lower() if unit == 'PPM' else 'lbs/acre'
             xml_string += f" <Element>{nutrient}</Element>\n"
+            xml_string += f" <Value>{nutrient_value}</Value>\n"
+            xml_string += f" <ModusTestID>S-{nutrient}-1:1.02.07</ModusTestID>\n"
+            # Set the value unit for each element
+value_units = {
+    "CEC": "meq/100g",
+    "OM": "%",
+    "pH": "none",
+    "BpH": "none",
+    "H_Meq": "meq/100g",
+    "pct H": "%",
+    "pct K": "%",
+    "pct Ca": "%",
+    "pct Mg": "%",
+    "pct Na": "%",
+    "Cu": "ppm",
+    "P Mehlich III (lbs)": "lbs/acre",
+    "P Bray I ": "ppm",
+    "K ": "ppm",
+    "S ": "ppm",
+    "Mg ": "ppm",
+    "Ca ": "ppm",
+    "B ": "ppm",
+    "Zn ": "ppm",
+    "Fe ": "ppm",
+    "Mn ": "ppm",
+    "NO3-N ": "ppm",
+    "Cl ": "ppm",
+    "Mo ": "ppm",
+    "Na ": "ppm"
+}
+
+# Iterate over rows in filtered_soil_test_data
+for index, row in filtered_soil_test_data.iterrows():
+    # Sample metadata
+    sample_id = row['SampleNumber']
+
+    # Generate XML string for current sample
+    xml_string = "<Sample>\n"
+    xml_string += f"  <SampleNumber>{sample_id}</SampleNumber>\n"
+    xml_string += f"  <ValueUnit>{unit}</ValueUnit>\n"
+
+    # Depth references for current sample
+    for depth_ref in depth_refs:
+        column_name = f"{depth_ref['StartingDepth']} - {depth_ref['EndingDepth']}"
+        xml_string += f"  <DepthRef DepthID=\"{depth_ref['DepthID']}\">\n"
+        xml_string += f"  </DepthRef>\n"
+
+    # Nutrient results for current sample
+    for nutrient in soil_test_data.columns:
+        if nutrient not in ['ID', 'SampleNumber']:
+            nutrient_value = row[nutrient]
+            nutrient_unit = value_units.get(nutrient, unit.lower())
+
+            xml_string += f"  <NutrientResult>\n"
+            xml_string += f"    <Element>{nutrient}</Element>\n"
+            xml_string += f"    <Value>{nutrient_value}</Value>\n"
+            xml_string += f"    <ModusTestID>S-{nutrient}-1:1.02.07</ModusTestID>\n"
+            xml_string += f"    <ValueType>Measured</ValueType>\n"
+            xml_string += f"    <ValueUnit>{nutrient_unit}</ValueUnit>\n"
+            xml_string += f"  </NutrientResult>\n"
 
     xml_string += "</Sample>\n"
     xml_strings += xml_string
