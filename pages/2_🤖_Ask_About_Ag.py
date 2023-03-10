@@ -1,7 +1,6 @@
 import streamlit as st
 import openai
 
-st.warning("This is a beta free service, please limit yourself to 3 topics per day.")
 st.title("Ask About Ag")
 st.write("This is a tool to help build your agricultural knowledge.")
 
