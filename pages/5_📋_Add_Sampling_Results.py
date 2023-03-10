@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import datetime
+import base64
 
 st.info("This app is under construction.")
 st.title("Generate Modus Sampling Results")
@@ -199,11 +200,12 @@ for index, row in filtered_soil_test_data.iterrows():
 
 print(xml_strings)
 
+# Download button
+if xml_strings:
+    filename = f"GeoMakerModus.xml"
+    b64 = base64.b64encode(xml_strings.encode()).decode()
+    href = f'<a href="data:file/xml;base64,{b64}" download="{filename}">Download {filename}</a>'
+    st.markdown(href, unsafe_allow_html=True)
+
 # Display the XML strings
 st.code(xml_strings, language='xml')
-
-
-
-
-
-
