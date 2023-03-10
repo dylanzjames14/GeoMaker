@@ -65,7 +65,8 @@ for i in range(num_depths + 1):
 
 # Display filtered soil test data, hiding columns with missing values
 st.write("---")
-st.write("Soil Test Data")
+st.header("Soil Test Results Table")
+st.write("To edit, double-click a cell and update the value. Your results will be updated in the XML")
 filtered_soil_test_data = soil_test_data[(soil_test_data['SampleNumber'] >= min_sample_id) & (soil_test_data['SampleNumber'] <= max_sample_id)]
 filtered_soil_test_data = filtered_soil_test_data.drop(columns=['ID'], errors='ignore')  # Drop the 'ID' column if it exists
 filtered_soil_test_data = filtered_soil_test_data.dropna(axis=1, how='all')  # Drop columns with all missing values
@@ -73,7 +74,6 @@ st.experimental_data_editor(filtered_soil_test_data)
 
 # Display depth references and corresponding XML strings for all samples
 st.write("---")
-st.write("Depth References and XML Strings")
 
 # ModusResult metadata
 event_date = str(datetime.date.today())
