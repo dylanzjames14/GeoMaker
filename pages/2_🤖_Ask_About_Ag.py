@@ -1,8 +1,8 @@
 import streamlit as st
 import openai
 
-st.title("Ask About Ag")
-st.write("This is a tool to help build your agricultural knowledge.")
+st.title("🤖 Ask About Ag")
+st.write("This is a tool to help build your agricultural knowledge. Enter your topic and click 'Learn'")
 
 openai.api_key = st.secrets["api_secret"]
 
