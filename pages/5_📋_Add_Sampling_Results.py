@@ -130,8 +130,3 @@ for index, row in filtered_soil_test_data.iterrows():
     xml_string += "</Sample>\n"
     xml_strings += xml_string
 
-# Display depth references and corresponding XML strings for all samples
-st.write("---")
-st.write("Depth References and XML Strings")
-st.write(xml_strings)
-
