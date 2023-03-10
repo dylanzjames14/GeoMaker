@@ -3,7 +3,7 @@ import leafmap.foliumap as leafmap
 
 st.set_page_config(layout="wide")
 st.title("Welcome to GeoMaker!")
-st.write("Geomaker is a tool for generating precision ag data! The goal of this site is to make it simple to produce test data anywhere on the planet.")
+st.write("Geomaker is a tool for generating precision ag information!")
 
 row1_col1, row1_col2 = st.columns(2)
 with row1_col1:
