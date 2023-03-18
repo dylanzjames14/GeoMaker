@@ -56,11 +56,12 @@ for i in range(num_depths + 1):
         max_depths.append(max_depth)
         depth_refs.append({
             "DepthID": i+1 if i > 0 else 1,
-            "StartingDepth": max_depths[i],
-            "EndingDepth": max_depth,
-            "ColumnDepth": max_depth - max_depths[i],
-            "DepthUnit": depth_unit.lower()
+          "StartingDepth": int(max_depths[i]),
+          "EndingDepth": int(max_depth),
+          "ColumnDepth": int(max_depth) - int(max_depths[i]),
+          "DepthUnit": depth_unit.lower()
         })
+
 
 
 # Display filtered soil test data, hiding columns with missing values
@@ -84,59 +85,6 @@ processed_date = str(datetime.date.today())
 # Initialize xml_strings for all samples
 xml_strings = ""
 
-# Generate ModusResult metadata
-modus_result_metadata = "<ModusResult xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" Version=\"1.0\" xsi:noNamespaceSchemaLocation=\"modus_result.xsd\">\n"
-modus_result_metadata += "<Event>\n"
-modus_result_metadata += "<EventMetaData>\n"
-modus_result_metadata += "<EventCode>1234-ABCD</EventCode>\n"
-modus_result_metadata += f"<EventDate>{event_date}</EventDate>\n"
-modus_result_metadata += "<EventType>\n<Soil/>\n</EventType>\n"
-modus_result_metadata += f"<EventExpirationDate>{expiration_date}</EventExpirationDate>\n"
-modus_result_metadata += "</EventMetaData>\n"
-modus_result_metadata += "<LabMetaData>\n"
-modus_result_metadata += "<LabName>GeoMaker Analytical</LabName>\n"
-modus_result_metadata += "<LabID>1234567</LabID>\n"
-modus_result_metadata += "<TestPackageRefs>\n"
-modus_result_metadata += "<TestPackageRef TestPackageID=\"1\">\n"
-modus_result_metadata += "<Name>Gold Package</Name>\n"
-modus_result_metadata += "<LabBillingCode>1234567</LabBillingCode>\n"
-modus_result_metadata += "</TestPackageRef>\n"
-modus_result_metadata += "</TestPackageRefs>\n"
-modus_result_metadata += f"<ReceivedDate>{received_date}T00:00:00-06:00</ReceivedDate>\n"
-modus_result_metadata += f"<ProcessedDate>{processed_date}T00:00:00-06:00</ProcessedDate>\n"
-modus_result_metadata += "<Reports></Reports>\n"
-modus_result_metadata += "</LabMetaData>\n"
-modus_result_metadata += "</Event>\n"
-modus_result_metadata += "</ModusResult>\n"
-
-# Add ModusResult metadata to xml_strings
-xml_strings += modus_result_metadata
-
-# Iterate over rows in filtered_soil_test_data
-for index, row in filtered_soil_test_data.iterrows():
-    # Sample metadata
-    sample_id = row['SampleNumber']
-
-    # Generate XML string for current sample
-    xml_string = "<Sample>\n"
-    xml_string += f"  <SampleNumber>{sample_id}</SampleNumber>\n"
-    xml_string += f"  <ValueUnit>{unit}</ValueUnit>\n"
-
-    # Depth references for current sample
-    for depth_ref in depth_refs:
-        column_name = f"{depth_ref['StartingDepth']} - {depth_ref['EndingDepth']}"
-        xml_string += f"  <DepthRef DepthID=\"{depth_ref['DepthID']}\">\n"
-        xml_string += f"  </DepthRef>\n"
-    
-    # Nutrient results for current sample
-    for nutrient in soil_test_data.columns:
-        if nutrient not in ['ID', 'SampleNumber']:
-            nutrient_value = row[nutrient]
-            nutrient_unit = unit.lower() if unit == 'PPM' else 'lbs/acre'
-            xml_string += f" <Element>{nutrient}</Element>\n"
-            xml_string += f" <Value>{nutrient_value}</Value>\n"
-            xml_string += f" <ModusTestID>S-{nutrient}-1:1.02.07</ModusTestID>\n"
-            # Set the value unit for each element
 value_units = {
     "CEC": "meq/100g",
     "OM": "%",
@@ -165,40 +113,127 @@ value_units = {
     "Na ": "ppm"
 }
 
-# Iterate over rows in filtered_soil_test_data
+value_desc = {
+    "CEC": "VL",
+    "OM": "VL",
+    "pH": "VL",
+    "BpH": "VL",
+    "H_Meq": "VL",
+    "pct H": "VL",
+    "pct K": "VL",
+    "pct Ca": "VL",
+    "pct Mg": "VL",
+    "pct Na": "VL",
+    "Cu": "VL",
+    "P Mehlich III (lbs)": "VL",
+    "P Bray I ": "VL",
+    "K ": "VL",
+    "S ": "VL",
+    "Mg ": "VL",
+    "Ca ": "VL",
+    "B ": "VL",
+    "Zn ": "VL",
+    "Fe ": "VL",
+    "Mn ": "VL",
+    "NO3-N ": "VL",
+    "Cl ": "VL",
+    "Mo ": "VL",
+    "Na ": "VL"
+}
+
+# Generate ModusResult metadata
+modus_result_metadata = "<ModusResult xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" Version=\"1.0\" xsi:noNamespaceSchemaLocation=\"modus_result.xsd\">\n"
+modus_result_metadata += "<Event>\n"
+modus_result_metadata += "<EventMetaData>\n"
+modus_result_metadata += "<EventCode>1234-ABCD</EventCode>\n"
+modus_result_metadata += f"<EventDate>{event_date}</EventDate>\n"
+modus_result_metadata += "<EventType>\n<Soil/>\n</EventType>\n"
+modus_result_metadata += f"<EventExpirationDate>{expiration_date}</EventExpirationDate>\n"
+modus_result_metadata += "</EventMetaData>\n"
+modus_result_metadata += "<LabMetaData>\n"
+modus_result_metadata += "<LabName>GeoMaker Analytical</LabName>\n"
+modus_result_metadata += "<LabID>1234567</LabID>\n"
+modus_result_metadata += "<LabEventID>1234567</LabEventID>\n"
+modus_result_metadata += "<TestPackageRefs>\n"
+modus_result_metadata += "<TestPackageRef TestPackageID=\"1\">\n"
+modus_result_metadata += "<Name>Gold Package</Name>\n"
+modus_result_metadata += "<LabBillingCode>1234567</LabBillingCode>\n"
+modus_result_metadata += "</TestPackageRef>\n"
+modus_result_metadata += "</TestPackageRefs>\n"
+modus_result_metadata += f"<ReceivedDate>{received_date}T00:00:00-06:00</ReceivedDate>\n"
+modus_result_metadata += f"<ProcessedDate>{processed_date}T00:00:00-06:00</ProcessedDate>\n"
+modus_result_metadata += "<Reports>\n"
+modus_result_metadata += "<Report>\n"
+modus_result_metadata += "<LabReportID>\n"
+modus_result_metadata += "</LabReportID>\n"
+modus_result_metadata += "<FileDescription>\n"
+modus_result_metadata += "</FileDescription>\n"
+modus_result_metadata += "<File>\n"
+modus_result_metadata += "</File>\n"
+modus_result_metadata += "</Report>\n"
+modus_result_metadata += "</Reports>\n"
+modus_result_metadata += "</LabMetaData>\n"
+
+# Generate XML string for each sample
+xml_strings = ""
+xml_strings += "<EventSamples>\n"  # Add the EventSamples opening tag
+xml_strings += "<Soil>\n"  # Add the Soil opening tag
+
+# Depth references (moved outside the loop)
+xml_string = "<DepthRefs>\n"
+for depth_ref in depth_refs:
+    column_name = f"{depth_ref['StartingDepth']} - {depth_ref['EndingDepth']}"
+    xml_string += f"  <DepthRef DepthID=\"{depth_ref['DepthID']}\">\n"
+    xml_string += f"    <Name>{column_name}</Name>\n"
+    xml_string += f"    <StartingDepth>{depth_ref['StartingDepth']}</StartingDepth>\n"
+    xml_string += f"    <EndingDepth>{depth_ref['EndingDepth']}</EndingDepth>\n"
+    xml_string += f"    <ColumnDepth>{depth_ref['ColumnDepth']}</ColumnDepth>\n"
+    xml_string += f"    <DepthUnit>{depth_ref['DepthUnit']}</DepthUnit>\n"
+    xml_string += f"  </DepthRef>\n"
+xml_string += "</DepthRefs>\n"
+xml_strings += xml_string
+
 for index, row in filtered_soil_test_data.iterrows():
-    # Sample metadata
-    sample_id = row['SampleNumber']
-
-    # Generate XML string for current sample
-    xml_string = "<Sample>\n"
-    xml_string += f"  <SampleNumber>{sample_id}</SampleNumber>\n"
-    xml_string += f"  <ValueUnit>{unit}</ValueUnit>\n"
-
-    # Depth references for current sample
-    for depth_ref in depth_refs:
-        column_name = f"{depth_ref['StartingDepth']} - {depth_ref['EndingDepth']}"
-        xml_string += f"  <DepthRef DepthID=\"{depth_ref['DepthID']}\">\n"
-        xml_string += f"  </DepthRef>\n"
-
     # Nutrient results for current sample
-    for nutrient in soil_test_data.columns:
-        if nutrient not in ['ID', 'SampleNumber']:
-            nutrient_value = row[nutrient]
-            nutrient_unit = value_units.get(nutrient, unit.lower())
+    xml_string = "<SoilSample>\n"
+    xml_string += "<SampleMetaData>\n"
+    xml_string += f"  <SampleNumber>{row['SampleNumber']}</SampleNumber>\n"
+    xml_string += "<OverwriteResult>false</OverwriteResult>\n"
+    xml_string += f"  <Geometry></Geometry>\n"
+    xml_string += "</SampleMetaData>\n"
+    xml_string += "<Depths>\n"  # Add the Depths opening tag
+    xml_string += "<Depth DepthID=\"1\">\n"  # Add the Depth opening tag
+    xml_string += "<NutrientResults>\n"  # Add the NutrientResults opening tag
 
-            xml_string += f"  <NutrientResult>\n"
-            xml_string += f"    <Element>{nutrient}</Element>\n"
-            xml_string += f"    <Value>{nutrient_value}</Value>\n"
-            xml_string += f"    <ModusTestID>S-{nutrient}-1:1.02.07</ModusTestID>\n"
-            xml_string += f"    <ValueType>Measured</ValueType>\n"
-            xml_string += f"    <ValueUnit>{nutrient_unit}</ValueUnit>\n"
-            xml_string += f"  </NutrientResult>\n"
 
-    xml_string += "</Sample>\n"
+    for nutrient in filtered_soil_test_data.columns:
+     if nutrient not in ['ID', 'SampleNumber']:
+        nutrient_value = row[nutrient]
+        nutrient_unit = value_units.get(nutrient, unit.lower())
+        nutrient_value_desc = value_desc.get(nutrient, "VL")
+
+        xml_string += f"  <NutrientResult>\n"
+        xml_string += f"    <Element>{nutrient}</Element>\n"
+        xml_string += f"    <Value>{nutrient_value}</Value>\n"
+        xml_string += f"    <ModusTestID>S-{nutrient}-1:1.02.07</ModusTestID>\n"
+        xml_string += f"    <ValueType>Measured</ValueType>\n"
+        xml_string += f"    <ValueUnit>{nutrient_unit}</ValueUnit>\n"
+        xml_string += f"    <ValueDesc>{nutrient_value_desc}</ValueDesc>\n"
+        xml_string += f"  </NutrientResult>\n"
+
+    xml_string += "</NutrientResults>\n"  # Add the NutrientResults closing tag
+    xml_string += "</Depth>\n"  # Add the Depth closing tag
+    xml_string += "</Depths>\n"  # Add the Depths closing tag
+    xml_string += "</SoilSample>\n"
     xml_strings += xml_string
 
-print(xml_strings)
+xml_strings += "</Soil>\n"  # Add the Soil closing tag
+xml_strings += "</EventSamples>\n"  # Add the EventSamples closing tag
+
+# Close the ModusResult tag
+xml_strings = modus_result_metadata + xml_strings
+xml_strings += "</Event>\n"
+xml_strings += "</ModusResult>\n"
 
 # Download button
 if xml_strings:
