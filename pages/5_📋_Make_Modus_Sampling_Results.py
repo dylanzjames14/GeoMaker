@@ -73,7 +73,7 @@ st.write("To edit, double-click in a cell and update its value")
 filtered_soil_test_data = soil_test_data[(soil_test_data['SampleNumber'] >= min_sample_id) & (soil_test_data['SampleNumber'] <= max_sample_id)]
 filtered_soil_test_data = filtered_soil_test_data.drop(columns=['ID'], errors='ignore')  # Drop the 'ID' column if it exists
 filtered_soil_test_data = filtered_soil_test_data.dropna(axis=1, how='all')  # Drop columns with all missing values
-st.experimental_data_editor(filtered_soil_test_data)
+edited_soil_test_data = st.experimental_data_editor(filtered_soil_test_data)
 
 # Display depth references and corresponding XML strings for all samples
 st.write("---")
@@ -195,7 +195,7 @@ for depth_ref in depth_refs:
 xml_string += "</DepthRefs>\n"
 xml_strings += xml_string
 
-for index, row in filtered_soil_test_data.iterrows():
+for index, row in edited_soil_test_data.iterrows():
     # Nutrient results for current sample
     xml_string = "<SoilSample>\n"
     xml_string += "<SampleMetaData>\n"
