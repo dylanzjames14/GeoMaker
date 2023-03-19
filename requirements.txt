@@ -7,3 +7,4 @@ streamlit-folium
 # git+https://github.com/giswqs/geemap
 openpyxl
 openai
+lxml
