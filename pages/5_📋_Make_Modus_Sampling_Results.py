@@ -3,6 +3,7 @@ import streamlit as st
 import datetime
 import base64
 
+st.set_page_config(layout="wide")
 st.info("This application is in beta. The addition of subsoils is coming soon!")
 st.title("Generate Modus Sampling Results")
 st.write("Configure your sampling results file. Your results will be printed below with a download option. Note large results may take awhile to generate.")
