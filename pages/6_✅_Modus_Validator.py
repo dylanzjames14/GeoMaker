@@ -26,7 +26,7 @@ def validate_xml(xml_data, schema_path):
     except etree.XMLSyntaxError as e:
         return False, str(e)
 
-st.title("XML Validator")
+st.title("Validate MODUS XML files")
 
 # Upload the XML file
 uploaded_file = st.file_uploader("Upload your XML file", type="xml")
