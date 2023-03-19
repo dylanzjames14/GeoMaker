@@ -40,7 +40,7 @@ depth_refs = []
 
 with st.expander("Add subsoils", expanded=False):
     # Markdown explaining beta
-    st.markdown("<span style='color: Blue;'>The addition of subsoil results is currently a work in progress. The subsoil values will not be included in the resulting XML file.</span>", unsafe_allow_html=True)
+     st.markdown("<span style='color: #f67b21;'> :face_palm: The addition of subsoil results is currently a work in progress. Currently, downloaded XML files will not include subsoil values.</span>", unsafe_allow_html=True)
     
     # Dropdown to select the number of depths sampled
     num_depths = st.selectbox("Select the # of unique depths for each sample.", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
