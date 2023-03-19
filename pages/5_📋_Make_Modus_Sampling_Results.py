@@ -4,7 +4,6 @@ import datetime
 import base64
 
 st.set_page_config(layout="wide")
-st.info("This application is in beta. The addition of subsoils is coming soon!")
 st.title("Generate Modus Sampling Results")
 st.write("Configure your sampling results file. Your results will be printed below with a download option. Note large results may take awhile to generate.")
 # Create 3 columns to hold the radio buttons for selecting the analysis and depth units
@@ -30,9 +29,6 @@ min_sample_id, max_sample_id = st.slider("Set sample range", 1, 500, (1, 30), 1)
 # Filter soil test data based on Sample range
 soil_test_data = soil_test_data[(soil_test_data.SampleNumber >= min_sample_id) & (soil_test_data.SampleNumber <= max_sample_id)]
 
-# Dropdown to select the number of depths sampled
-num_depths = st.selectbox("Unique depths collected at each sample", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
-
 # Create a list of default maximum depths
 default_depths = [0, 6, 12, 18, 24, 30, 36]
 
@@ -41,6 +37,13 @@ max_depths = [0.0]
 
 # Initialize list to store depth references
 depth_refs = []
+
+with st.expander("Add subsoils", expanded=False):
+    # Markdown explaining beta
+    st.markdown("<span style='color: red;'>The addition of subsoil results is currently a work in progress. The subsoil values will not be included in the resulting XML file.</span>", unsafe_allow_html=True)
+    
+    # Dropdown to select the number of depths sampled
+    num_depths = st.selectbox("Select the # of unique depths for each sample.", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
 
 # Input boxes for the maximum depth for topsoil and subsoils
 cols = st.columns(num_depths + 1)
@@ -57,13 +60,11 @@ for i in range(num_depths + 1):
         max_depths.append(max_depth)
         depth_refs.append({
             "DepthID": i+1 if i > 0 else 1,
-          "StartingDepth": int(max_depths[i]),
-          "EndingDepth": int(max_depth),
-          "ColumnDepth": int(max_depth) - int(max_depths[i]),
-          "DepthUnit": depth_unit.lower()
+            "StartingDepth": int(max_depths[i]),
+            "EndingDepth": int(max_depth),
+            "ColumnDepth": int(max_depth) - int(max_depths[i]),
+            "DepthUnit": depth_unit.lower()
         })
-
-
 
 # Display filtered soil test data, hiding columns with missing values
 st.write("---")
