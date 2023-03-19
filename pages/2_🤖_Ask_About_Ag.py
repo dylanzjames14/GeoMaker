@@ -1,6 +1,7 @@
 import streamlit as st
 import openai
 
+st.set_page_config(layout="wide")
 st.title("🤖 Ask About Ag")
 st.write("This is a tool to help build your agricultural knowledge. Enter your topic and click 'Learn'")
 
