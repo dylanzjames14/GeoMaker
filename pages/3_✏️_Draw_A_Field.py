@@ -9,7 +9,7 @@ import leafmap.foliumap as leafmap
 from folium.plugins import Draw
 
 st.set_page_config(layout="wide")
-st.title("Draw A Field")
+st.title("✏️ Draw A Field")
 st.markdown("""
 1. Use the map tools to locate the area of interest. You may pan or use the search function.
 2. Once you've located your field, use the draw tools to draw your field boundary.
