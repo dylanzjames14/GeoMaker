@@ -10,7 +10,7 @@ from folium.plugins import Draw
 
 st.set_page_config(layout="wide")
 st.info("This app is under construction, but have a play with the map!")
-st.title("Create Sampling Points")
+st.title("📍 Create Sampling Points")
 st.write("This tool will allow you to configure a sampling scheme and save it as a shapefile.")
 
 st.file_uploader("Upload your .shp, .geojson, or .kml",accept_multiple_files=False, type=['shp','geojson','kml'])
