@@ -29,7 +29,7 @@ def validate_xml(xml_data, schema_path):
 st.title("Validate MODUS XML files")
 
 # Upload the XML file
-uploaded_file = st.file_uploader("Upload your XML file", type="xml")
+uploaded_file = st.file_uploader("✅ Upload your XML file", type="xml")
 if uploaded_file is not None:
     xml_data = uploaded_file.read()
 
