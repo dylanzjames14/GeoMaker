@@ -246,7 +246,7 @@ for index, row in edited_soil_test_data.iterrows():
     # Nutrient results for current sample
     xml_string = "<SoilSample>\n"
     xml_string += "<SampleMetaData>\n"
-    xml_string += f"  <SampleNumber>{row['SampleNumber']}</SampleNumber>\n"
+    xml_string += f"  <SampleNumber>{int(row['SampleNumber'])}</SampleNumber>\n"
     xml_string += "<OverwriteResult>false</OverwriteResult>\n"
     xml_string += f"  <Geometry></Geometry>\n"
     xml_string += "</SampleMetaData>\n"
