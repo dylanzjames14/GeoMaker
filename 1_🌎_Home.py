@@ -12,4 +12,4 @@ with row1_col1:
 
 with row1_col2:
     st.image("Data/BoothillMissouri.gif")
-    st.image("https://github.com/giswqs/data/raw/main/timelapse/fire.gif")
+    st.image("Data/MississippiRiverValley.gif")
