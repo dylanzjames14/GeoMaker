@@ -259,7 +259,7 @@ for index, row in edited_soil_test_data.iterrows():
         xml_string += f"  <NutrientResult>\n"
         xml_string += f"    <Element>{nutrient}</Element>\n"
         xml_string += f"    <Value>{nutrient_value}</Value>\n"
-        xml_string += f"    <ModusTestID>S-{nutrient}-1:1.02.07</ModusTestID>\n"
+        xml_string += f"    <ModusTestID>S-{nutrient}-B2-1:7.01.03</ModusTestID>\n"
         xml_string += f"    <ValueType>Measured</ValueType>\n"
         xml_string += f"    <ValueUnit>{nutrient_unit}</ValueUnit>\n"
         xml_string += f"    <ValueDesc>{nutrient_value_desc}</ValueDesc>\n"
