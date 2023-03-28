@@ -6,22 +6,15 @@ import base64
 st.set_page_config(layout="wide")
 st.title("📋 Make Modus Sampling Results")
 st.write("Configure your sampling results file. Your results will be printed below with a download option. Note large results may take awhile to generate.")
-# Create 3 columns to hold the radio buttons for selecting the analysis and depth units
-col1, col2 = st.columns(2)
 
-# Radio button to select between LBS and PPM
-with col1:
-    unit = st.radio("Analysis units:", ('LBS', 'PPM'))
+# Set default unit as PPM
+unit = 'PPM'
 
 # Radio button to select depth units
-with col2:
-    depth_unit = st.radio("Depth units:", ("Inches", "Centimeters"))
+depth_unit = st.radio("Depth units:", ("Inches", "Centimeters"))
 
 # Load soil test data
-if unit == 'LBS':
-    soil_test_data = pd.read_excel("Data/lbsSoilTest.xlsx")
-else:
-    soil_test_data = pd.read_excel("Data/ppmSoilTest.xlsx")
+soil_test_data = pd.read_excel("Data/ppmSoilTest.xlsx")
 
 # Range sliders for setting min and max range of sample IDs
 min_sample_id, max_sample_id = st.slider("Set sample range", 1, 500, (1, 30), 1)
@@ -40,10 +33,10 @@ depth_refs = []
 
 with st.expander("Add subsoils", expanded=False):
     # Markdown explaining beta
-     st.markdown("<span style='color: #f67b21;'> :face_palm: The addition of subsoil results is currently a work in progress. Currently, downloaded XML files will not include subsoil values.</span>", unsafe_allow_html=True)
+    st.markdown("<span style='color: #f67b21;'> :face_palm: The addition of subsoil results is currently a work in progress. Currently, downloaded XML files will not include subsoil values.</span>", unsafe_allow_html=True)
     
     # Dropdown to select the number of depths sampled
-     num_depths = st.selectbox("Select the # of unique depths for each sample.", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
+    num_depths = st.selectbox("Select the # of unique depths for each sample.", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
 
 # Input boxes for the maximum depth for topsoil and subsoils
 cols = st.columns(num_depths + 1)
@@ -75,9 +68,6 @@ filtered_soil_test_data = filtered_soil_test_data.drop(columns=['ID'], errors='i
 filtered_soil_test_data = filtered_soil_test_data.dropna(axis=1, how='all')  # Drop columns with all missing values
 edited_soil_test_data = st.experimental_data_editor(filtered_soil_test_data)
 
-# Display depth references and corresponding XML strings for all samples
-st.write("---")
-
 # ModusResult metadata
 event_date = str(datetime.date.today())
 expiration_date = str(datetime.date.today() + datetime.timedelta(days=7))
@@ -88,6 +78,11 @@ processed_date = str(datetime.date.today())
 xml_strings = ""
 
 value_units = {
+    "BS-H": "%",
+    "BS-K": "%",
+    "BS-Ca": "%",
+    "BS-Mg": "%",
+    "BS-Na": "%",
     "CEC": "meq/100g",
     "OM": "%",
     "pH": "none",
@@ -290,6 +285,3 @@ if xml_strings:
     b64 = base64.b64encode(xml_strings.encode()).decode()
     href = f'<a href="data:file/xml;base64,{b64}" download="{filename}">Download Modus XML File</a>'
     st.markdown(href, unsafe_allow_html=True)
-
-# Display the XML strings
-st.code(xml_strings, language='xml')
