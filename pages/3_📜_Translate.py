@@ -4,7 +4,7 @@ import openai
 st.set_page_config(layout="wide")
 st.title("📜 Translate")
 st.write("The tool is designed to translate agricultural application text strings like a professional in the field. You can choose the language you want to translate into and input the text to be translated.")
-st.warning("Information translated using this tool is being translated via OpenAIs API.")
+st.warning("Information translated using this tool is being translated using OpenAI's API. Please do not input sensitive information.")
 
 openai.api_key = st.secrets["api_secret"]
 
