@@ -4,7 +4,7 @@ import openai
 st.set_page_config(layout="wide")
 st.title("🤖 Ask About Ag")
 st.write("This is a tool to help build your agricultural knowledge. Enter your topic and click 'Learn'")
-st.warning("Information translated using this tool is being translated using OpenAI's API. Please do not input sensitive information.")
+st.warning("Information from this tool is coming from OpenAI's API. Please do not input sensitive information.")
 
 openai.api_key = st.secrets["api_secret"]
 
