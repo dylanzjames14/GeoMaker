@@ -32,9 +32,6 @@ max_depths = [0.0]
 depth_refs = []
 
 with st.expander("Add subsoils", expanded=False):
-    # Markdown explaining beta
-    st.markdown("<span style='color: #f67b21;'> :face_palm: The addition of subsoil results is currently a work in progress. Currently, downloaded XML files will not include subsoil values.</span>", unsafe_allow_html=True)
-    
     # Dropdown to select the number of depths sampled
     num_depths = st.selectbox("Select the # of unique depths for each sample.", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
 
@@ -244,27 +241,29 @@ for index, row in edited_soil_test_data.iterrows():
     xml_string += f"  <Geometry></Geometry>\n"
     xml_string += "</SampleMetaData>\n"
     xml_string += "<Depths>\n"  # Add the Depths opening tag
-    xml_string += "<Depth DepthID=\"1\">\n"  # Add the Depth opening tag
-    xml_string += "<NutrientResults>\n"  # Add the NutrientResults opening tag
 
+    for depth_ref in depth_refs:
+        xml_string += f"<Depth DepthID=\"{depth_ref['DepthID']}\">\n"  # Add the Depth opening tag
+        xml_string += "<NutrientResults>\n"  # Add the NutrientResults opening tag
 
-    for nutrient in filtered_soil_test_data.columns:
-     if nutrient not in ['ID', 'SampleNumber']:
-        nutrient_value = row[nutrient]
-        nutrient_unit = value_units.get(nutrient, unit.lower())
-        nutrient_value_desc = value_desc.get(nutrient, "VL")
+        for nutrient in filtered_soil_test_data.columns:
+            if nutrient not in ['ID', 'SampleNumber']:
+                nutrient_value = row[nutrient]
+                nutrient_unit = value_units.get(nutrient, unit.lower())
+                nutrient_value_desc = value_desc.get(nutrient, "VL")
 
-        xml_string += f"  <NutrientResult>\n"
-        xml_string += f"    <Element>{nutrient}</Element>\n"
-        xml_string += f"    <Value>{nutrient_value}</Value>\n"
-        xml_string += f"    <ModusTestID>S-{nutrient}-B2-1:7.01.03</ModusTestID>\n"
-        xml_string += f"    <ValueType>Measured</ValueType>\n"
-        xml_string += f"    <ValueUnit>{nutrient_unit}</ValueUnit>\n"
-        xml_string += f"    <ValueDesc>{nutrient_value_desc}</ValueDesc>\n"
-        xml_string += f"  </NutrientResult>\n"
+                xml_string += f"  <NutrientResult>\n"
+                xml_string += f"    <Element>{nutrient}</Element>\n"
+                xml_string += f"    <Value>{nutrient_value}</Value>\n"
+                xml_string += f"    <ModusTestID>S-{nutrient}-B2-1:7.01.03</ModusTestID>\n"
+                xml_string += f"    <ValueType>Measured</ValueType>\n"
+                xml_string += f"    <ValueUnit>{nutrient_unit}</ValueUnit>\n"
+                xml_string += f"    <ValueDesc>{nutrient_value_desc}</ValueDesc>\n"
+                xml_string += f"  </NutrientResult>\n"
 
-    xml_string += "</NutrientResults>\n"  # Add the NutrientResults closing tag
-    xml_string += "</Depth>\n"  # Add the Depth closing tag
+        xml_string += "</NutrientResults>\n"  # Add the NutrientResults closing tag
+        xml_string += "</Depth>\n"  # Add the Depth closing tag
+
     xml_string += "</Depths>\n"  # Add the Depths closing tag
     xml_string += "</SoilSample>\n"
     xml_strings += xml_string
