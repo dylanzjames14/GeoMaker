@@ -68,7 +68,7 @@ edited_soil_test_data = st.experimental_data_editor(filtered_soil_test_data)
 # Create expander and checkboxes for each header from the .xlxs file
 with st.expander("Select analysis to include in the Modus XML file", expanded=False):
     # Calculate the number of columns needed
-    num_columns = 8
+    num_columns = 6
     # Create the columns
     checkbox_columns = st.columns(num_columns)
     
@@ -130,8 +130,9 @@ default_checkbox_states = {
 # Place checkboxes in the columns
 selected_columns = {}
 for column in filtered_soil_test_data.columns:
-    selected_columns[column] = checkbox_columns[column_counter].checkbox(column, value=default_checkbox_states.get(column, True))
-    column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
+    if column != "SampleNumber":
+        selected_columns[column] = checkbox_columns[column_counter].checkbox(column, value=default_checkbox_states.get(column, True))
+        column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
 
 # ModusResult metadata
 event_date = str(datetime.date.today())
