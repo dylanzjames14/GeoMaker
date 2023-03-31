@@ -65,6 +65,22 @@ filtered_soil_test_data = filtered_soil_test_data.drop(columns=['ID'], errors='i
 filtered_soil_test_data = filtered_soil_test_data.dropna(axis=1, how='all')  # Drop columns with all missing values
 edited_soil_test_data = st.experimental_data_editor(filtered_soil_test_data)
 
+# Create expander and checkboxes for each header from the .xlxs file
+with st.expander("Select analysis to include in the Modus XML file", expanded=False):
+    # Calculate the number of columns needed
+    num_columns = 8
+    # Create the columns
+    checkbox_columns = st.columns(num_columns)
+    
+    # Initialize a counter for the current column
+    column_counter = 0
+
+    # Place checkboxes in the columns
+    selected_columns = {}
+    for column in filtered_soil_test_data.columns:
+        selected_columns[column] = checkbox_columns[column_counter].checkbox(column, value=True)
+        column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
+
 # ModusResult metadata
 event_date = str(datetime.date.today())
 expiration_date = str(datetime.date.today() + datetime.timedelta(days=7))
@@ -89,14 +105,14 @@ value_units = {
     "pct Mg": "%",
     "pct Na": "%",
     "Cu": "ppm",
-    "P Mehlich III (lbs)": "lbs/acre",
+    "P Mehlich III (lbs)": "ppm",
     "P Bray I ": "ppm",
     "K ": "ppm",
     "S ": "ppm",
     "Mg ": "ppm",
     "Ca ": "ppm",
     "B ": "ppm",
-    "Zn ": "mg/kg",
+    "Zn ": "ppm",
     "Fe ": "ppm",
     "Mn ": "ppm",
     "NO3-N ": "ppm",
@@ -106,9 +122,7 @@ value_units = {
     "AC": "meq/100 g",
     "AdjSAR": "meq/L",
     "Al": "meq/100g",
-    "BD": "g/cm3",
     "BS": "%",
-    "CO3": "%",
     "ECAP": "dS/m",
     "EKP": "ppm",
     "EMgP": "ppm",
@@ -247,7 +261,7 @@ for index, row in edited_soil_test_data.iterrows():
         xml_string += "<NutrientResults>\n"  # Add the NutrientResults opening tag
 
         for nutrient in filtered_soil_test_data.columns:
-            if nutrient not in ['ID', 'SampleNumber']:
+            if nutrient not in ['ID', 'SampleNumber'] and selected_columns[nutrient]:
                 nutrient_value = row[nutrient]
                 nutrient_unit = value_units.get(nutrient, unit.lower())
                 nutrient_value_desc = value_desc.get(nutrient, "VL")
