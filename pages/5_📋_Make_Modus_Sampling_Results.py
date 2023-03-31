@@ -75,17 +75,70 @@ with st.expander("Select analysis to include in the Modus XML file", expanded=Fa
     # Initialize a counter for the current column
     column_counter = 0
 
-    # Place checkboxes in the columns
-    selected_columns = {}
-    for column in filtered_soil_test_data.columns:
-        selected_columns[column] = checkbox_columns[column_counter].checkbox(column, value=True)
-        column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
+    # Define default checkbox states
+default_checkbox_states = {
+    "BD": False,
+    "SS": False,
+    "CO3": False,
+    "CEC": True,
+    "OM": True,
+    "pH": True,
+    "BpH": True,
+    "H_Meq": True,
+    "pct H": True,
+    "pct K": True,
+    "pct Ca": True,
+    "pct Mg": True,
+    "pct Na": True,
+    "Cu": True,
+    "P Mehlich III (lbs)": True,
+    "P Bray I ": True,
+    "K ": True,
+    "S ": True,
+    "Mg ": True,
+    "Ca ": True,
+    "B ": True,
+    "Zn ": True,
+    "Fe ": True,
+    "Mn ": True,
+    "NO3-N ": True,
+    "Cl ": True,
+    "Mo ": True,
+    "Na ": True,
+    "AC": True,
+    "AdjSAR": "meq/L",
+    "Al": False,
+    "BS": False,
+    "ECAP": False,
+    "EKP": False,
+    "EMgP": False,
+    "ESP": False,
+    "HCO3": False,
+    "HM": False,
+    "Mo": False,
+    "NH4-N": True,
+    "Ni": False,
+    "OC": True,
+    "RZM": False,
+    "Si": True,
+    "Slake": False,
+    "SO4-S": True,
+    "TN": False,
+    "TOC": False,
+}
+
+# Place checkboxes in the columns
+selected_columns = {}
+for column in filtered_soil_test_data.columns:
+    selected_columns[column] = checkbox_columns[column_counter].checkbox(column, value=default_checkbox_states.get(column, True))
+    column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
 
 # ModusResult metadata
 event_date = str(datetime.date.today())
 expiration_date = str(datetime.date.today() + datetime.timedelta(days=7))
 received_date = str(datetime.date.today())
 processed_date = str(datetime.date.today())
+
 
 # Initialize xml_strings for all samples
 xml_strings = ""
