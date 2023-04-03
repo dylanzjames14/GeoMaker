@@ -9,7 +9,7 @@ st.warning("Information translated using this tool is being translated using Ope
 openai.api_key = st.secrets["api_secret"]
 
 # Create a dropdown for language selection
-language_mapping = {'Spanish': 'es', 'Portuguese': 'pt', 'Afrikaans': 'af'}
+language_mapping = {'Spanish': 'es', 'Portuguese': 'pt', 'Afrikaans': 'af', 'French (Canada)': 'fr-CA', 'French (France)': 'fr-FR'}
 language = st.selectbox("Select target language:", options=list(language_mapping.keys()))
 
 # Create a text area for the user to input the text to be translated
@@ -19,7 +19,7 @@ input_text = st.text_area("Enter your text to be translated:", max_chars=500)
 if st.button("Translate!"):
     with st.spinner('Translating your text...'):
         # Create a prompt for translation based on the user's input and the selected language
-        prompt = f"Translate the following precision agriculture application text strings as an ag professional to {language}: '{input_text}'"
+        prompt = f"Translate the following text string as an ag professional to {language}: '{input_text}'"
 
         # Call the OpenAI API to generate the translated text
         response = openai.Completion.create(
@@ -35,4 +35,3 @@ if st.button("Translate!"):
 
         # Add a download button
         st.download_button('Download result', translated_text)
-
