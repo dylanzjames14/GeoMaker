@@ -9,7 +9,7 @@ st.warning("Information translated using this tool is being translated using Ope
 openai.api_key = st.secrets["api_secret"]
 
 # Create a dropdown for language selection
-language_mapping = {'Spanish (Mexico)': 'es-MX', 'Spanish (Colombia)': 'es-CO', 'Portuguese': 'pt', 'Afrikaans': 'af', 'French (Canada)': 'fr-CA', 'French (France)': 'fr-FR'}
+language_mapping = {'Spanish (Mexico)': 'es-MX', 'Spanish (Colombia)': 'es-CO', 'Spanish (Argentina)': 'es-AR', 'Portuguese': 'pt', 'Afrikaans': 'af', 'French (Canada)': 'fr-CA', 'French (France)': 'fr-FR'}
 language = st.selectbox("Select target language:", options=list(language_mapping.keys()))
 
 # Create a text area for the user to input the text to be translated
