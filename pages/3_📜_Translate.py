@@ -19,8 +19,7 @@ input_text = st.text_area("Enter your text to be translated:", max_chars=500)
 if st.button("Translate!"):
     with st.spinner('Translating your text...'):
         # Create a prompt for translation based on the user's input and the selected language
-        prompt = f"Translate the following text string as an ag professional to {language}: '{input_text}'"
-
+        prompt = f"Translate '{input_text}' {language},as an ag professional."
         # Call the OpenAI API to generate the translated text
         response = openai.Completion.create(
             engine="text-davinci-003",
