@@ -15,7 +15,7 @@ if st.button("Learn!"):
         # Use GPT-3 to generate a summary of the article
         response = openai.Completion.create(
             engine="text-davinci-003",
-            prompt="Write me a few paragraphs explaining the following topic as an ag professional would respond: " + article_text,
+            prompt="Write me a brief explaination of the following topic, responding as an ag professional: " + article_text,
             max_tokens=4000,
             temperature=1,
         )
