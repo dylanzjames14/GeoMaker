@@ -39,10 +39,11 @@ def save_geojson_to_shapefile(all_drawings, filename):
             return buffer.read()
 
 st.title("📍 Create Sampling Points")
-st.write("This tool will allow you to configure a sampling scheme and save it as a shapefile.")
-st.write("1. Navigate to your field on the map.")
-st.write("2. Drop points using the 'Point' tool on the map.")
-st.write("3. Once complete, click 'Save to Shapefile' and download your resulting .zip containing your points.")
+st.markdown("""
+1. Navigate to your field on the map.
+2. Drop points using the 'Point' tool on the map.
+3. 3. Once complete, click **Save to Shapefile** and download your resulting .zip containing your points.
+""")
 
 m = folium.Map(
     location=[36.1256, -97.0665],
