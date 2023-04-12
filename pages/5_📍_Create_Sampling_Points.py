@@ -42,7 +42,7 @@ st.title("📍 Create Sampling Points")
 st.markdown("""
 1. Navigate to your field on the map.
 2. Drop points using the 'Point' tool on the map.
-3. 3. Once complete, click **Save to Shapefile** and download your resulting .zip containing your points.
+3. Once complete, click **Save to Shapefile** and download your resulting .zip containing your points.
 """)
 
 m = folium.Map(
