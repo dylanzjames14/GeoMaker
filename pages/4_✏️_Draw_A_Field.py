@@ -38,10 +38,10 @@ def save_geojson_to_shapefile(all_drawings, filename):
             buffer.seek(0)
             return buffer.read()
 
-st.title("📍 Draw Polygons")
+st.title("📍 Draw a Field")
 st.markdown("""
 1. Navigate to your field on the map.
-2. Draw polygons using the 'Polygon', 'Rectangle', or 'Circle' tool on the map.
+2. Draw field boundaries using the 'Polygon', 'Rectangle', or 'Circle' tool on the map.
 3. Once complete, click **Save to Shapefile** and download your resulting .zip containing your polygons.
 """)
 
