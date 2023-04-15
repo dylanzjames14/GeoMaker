@@ -40,9 +40,8 @@ def save_geojson_to_shapefile(all_drawings, filename):
 
 st.title("📍 Create Sampling Points")
 st.markdown("""
-1. Navigate to your field on the map.
-2. Drop points using the 'Point' tool on the map.
-3. Once complete, click **Save to Shapefile** and download your resulting .zip containing your points.
+1. Find your field using the map and drop points using the **Point** tool on the map.
+2. Once complete, click **Save to Shapefile** and download your resulting .zip containing your points.
 """)
 
 m = folium.Map(
@@ -67,7 +66,7 @@ draw_control = Draw(export=False, draw_options=draw_options)
 draw_control.add_to(m)
 
 # Display the map without columns
-returned_objects = st_folium(m, width=1000, height=600, returned_objects=["all_drawings"])
+returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
 
 if st.button("Save to Shapefile"):
     if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
