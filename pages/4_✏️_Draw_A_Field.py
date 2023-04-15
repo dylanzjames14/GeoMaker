@@ -38,11 +38,10 @@ def save_geojson_to_shapefile(all_drawings, filename):
             buffer.seek(0)
             return buffer.read()
 
-st.title("📍 Draw a Field")
+st.title("✏️ Draw a Field")
 st.markdown("""
-1. Navigate to your field on the map.
-2. Draw field boundaries using the 'Polygon', 'Rectangle', or 'Circle' tool on the map.
-3. Once complete, click **Save to Shapefile** and download your resulting .zip containing your polygons.
+1. Navigate to your field on the map and draw a field boundary using the map tools.
+2. Once complete, click **Save to Shapefile** and download your resulting .zip containing your polygons.
 """)
 
 m = folium.Map(
@@ -67,7 +66,7 @@ draw_control = Draw(export=False, draw_options=draw_options)
 draw_control.add_to(m)
 
 # Display the map without columns
-returned_objects = st_folium(m, width=1000, height=600, returned_objects=["all_drawings"])
+returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
 
 if st.button("Save to Shapefile"):
     if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
