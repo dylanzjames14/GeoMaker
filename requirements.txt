@@ -8,3 +8,4 @@ streamlit-folium
 openpyxl
 openai
 lxml
+simplekml
