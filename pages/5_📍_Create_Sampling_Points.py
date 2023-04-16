@@ -44,6 +44,9 @@ st.markdown("""
 2. Once complete, click **Save to Shapefile** and download your resulting .zip containing your points.
 """)
 
+# Create an empty placeholder for the buttons
+buttons_placeholder = st.empty()
+
 m = folium.Map(
     location=[36.1256, -97.0665],
     zoom_start=10,
@@ -68,9 +71,10 @@ draw_control.add_to(m)
 # Display the map without columns
 returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
 
-if st.button("Save to Shapefile"):
-    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
+# Show the buttons above the map
+if buttons_placeholder.button("Save to Shapefile"):
+    if returned_objects and isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
         shapefile_data = save_geojson_to_shapefile(returned_objects['all_drawings'], "SamplePoints")
-        st.download_button("Download Shapefile", shapefile_data, "GeoMaker_Point_Shapefile.zip", "application/zip")
+        buttons_placeholder.download_button("Download Shapefile", shapefile_data, "GeoMaker_Point_Shapefile.zip", "application/zip")
     else:
         st.warning("No markers found. Please add markers to the map.")
