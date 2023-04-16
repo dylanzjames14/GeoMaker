@@ -5,7 +5,7 @@ import base64
 
 st.set_page_config(layout="wide")
 st.title("📋 Make Modus Sampling Results")
-st.write("Configure your sampling results file. Your results will be printed below with a download option. Note large results may take awhile to generate.")
+st.write("Configure your sampling results file. Your results will be printed below with a download option.")
 
 # Set default unit as PPM
 unit = 'PPM'
