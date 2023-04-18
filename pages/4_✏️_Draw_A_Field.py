@@ -11,6 +11,8 @@ import os
 from shapely.geometry import shape as shapely_shape, mapping
 import simplekml
 
+st.set_page_config(layout="wide")
+
 def save_geojson_to_shapefile(all_drawings, filename):
     with tempfile.TemporaryDirectory() as tmpdir:
         # Define schema
