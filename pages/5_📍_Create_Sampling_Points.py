@@ -10,6 +10,8 @@ import fiona
 import os
 from shapely.geometry import Point, mapping
 
+st.set_page_config(layout="wide")
+
 def save_geojson_to_shapefile(all_drawings, filename):
     with tempfile.TemporaryDirectory() as tmpdir:
         # Define schema
