@@ -34,7 +34,7 @@ def app():
     total_product = pounds_per_acre * area
 
     # Display the result to the user
-    st.write('Total product needed:', total_product, 'pounds')
+    st.write('Total product needed:', total_product)
 
 # Run the Streamlit app
 if __name__ == '__main__':
