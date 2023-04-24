@@ -279,7 +279,7 @@ else:
     data = st.session_state.data
 
 # Add a button to generate random values
-if st.button("Generate Random Values"):
+if st.button("Generate Soil Test Data"):
     for column in data.columns:
         if column != 'SampleNumber':  # Skip the 'SampleNumber' column
             min_value, max_value = default_min_max_values[column]
