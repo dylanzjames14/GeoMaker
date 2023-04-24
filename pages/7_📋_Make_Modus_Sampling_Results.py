@@ -1,26 +1,12 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import numpy as np
 import datetime
 import base64
 
 st.set_page_config(layout="wide")
 st.title("📋 Make Modus Sampling Results")
-st.write("Configure your sampling results file. Your results will be printed below with a download option.")
-
-# Set default unit as PPM
-unit = 'PPM'
-
-# Radio button to select depth units
-depth_unit = st.radio("Depth units:", ("Inches", "Centimeters"))
-
-# Load soil test data
-soil_test_data = pd.read_excel("Data/ppmSoilTest.xlsx")
-
-# Range sliders for setting min and max range of sample IDs
-min_sample_id, max_sample_id = st.slider("Set sample range", 1, 500, (1, 30), 1)
-
-# Filter soil test data based on Sample range
-soil_test_data = soil_test_data[(soil_test_data.SampleNumber >= min_sample_id) & (soil_test_data.SampleNumber <= max_sample_id)]
+st.write("Configure your sampling results file using the options in the expander menus.")
 
 # Create a list of default maximum depths
 default_depths = [0, 6, 12, 18, 24, 30, 36]
@@ -31,55 +17,8 @@ max_depths = [0.0]
 # Initialize list to store depth references
 depth_refs = []
 
-with st.expander("Add subsoils", expanded=False):
-    # Dropdown to select the number of depths sampled
-    num_depths = st.selectbox("Select the # of unique depths for each sample.", [0, 1, 2, 3, 4, 5], key='num_depths', index=0)
-
-# Input boxes for the maximum depth for topsoil and subsoils
-cols = st.columns(num_depths + 1)
-for i in range(num_depths + 1):
-    with cols[i]:
-        if i == 0:
-            st.write(f'<span style="color: #f67b21">Topsoil</span>', unsafe_allow_html=True)
-        else:
-            st.write(f'<span style="color: #f67b21">Subsoil {i}</span>', unsafe_allow_html=True)
-        if depth_unit == "Inches":
-            max_depth = st.number_input(f"Depth ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
-        else:
-            max_depth = st.number_input(f"Depth {i} ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
-        max_depths.append(max_depth)
-        depth_refs.append({
-            "DepthID": i+1 if i > 0 else 1,
-            "StartingDepth": int(max_depths[i]),
-            "EndingDepth": int(max_depth),
-            "ColumnDepth": int(max_depth) - int(max_depths[i]),
-            "DepthUnit": depth_unit.lower()
-        })
-
-# Display filtered soil test data, hiding columns with missing values
-st.write("---")
-st.header("Soil Test Results")
-st.write("To edit, double-click in a cell and update its value")
-filtered_soil_test_data = soil_test_data[(soil_test_data['SampleNumber'] >= min_sample_id) & (soil_test_data['SampleNumber'] <= max_sample_id)]
-filtered_soil_test_data = filtered_soil_test_data.drop(columns=['ID'], errors='ignore')  # Drop the 'ID' column if it exists
-filtered_soil_test_data = filtered_soil_test_data.dropna(axis=1, how='all')  # Drop columns with all missing values
-edited_soil_test_data = st.experimental_data_editor(filtered_soil_test_data)
-
-# Create expander and checkboxes for each header from the .xlxs file
-with st.expander("Select analysis to include in the Modus XML file", expanded=False):
-    # Calculate the number of columns needed
-    num_columns = 6
-    # Create the columns
-    checkbox_columns = st.columns(num_columns)
-    
-    # Initialize a counter for the current column
-    column_counter = 0
-
-    # Define default checkbox states
+# Define default checkbox states
 default_checkbox_states = {
-    "BD": False,
-    "SS": False,
-    "CO3": False,
     "CEC": True,
     "OM": True,
     "pH": True,
@@ -91,22 +30,28 @@ default_checkbox_states = {
     "pct Mg": True,
     "pct Na": True,
     "Cu": True,
-    "P Mehlich III (lbs)": True,
-    "P Bray I ": True,
-    "K ": True,
-    "S ": True,
-    "Mg ": True,
-    "Ca ": True,
-    "B ": True,
-    "Zn ": True,
-    "Fe ": True,
-    "Mn ": True,
-    "NO3-N ": True,
-    "Cl ": True,
-    "Mo ": True,
-    "Na ": True,
+    "K": True,
+    "P": True,
+    "S": True,
+    "Mg": True,
+    "Ca": True,
+    "B": True,
+    "Zn": True,
+    "Fe": True,
+    "Mn": True,
+    "NO3-N": True,
+    "Cl": True,
+    "Mo": True,
+    "Na": True,
     "AC": True,
-    "AdjSAR": "meq/L",
+    "NH4-N": True,
+    "OC": True,
+    "Si": True,
+    "SO4-S": True,
+    "BD": True,
+    "SS": False,
+    "CO3": False,
+    "AdjSAR": False,
     "Al": False,
     "BS": False,
     "ECAP": False,
@@ -115,24 +60,251 @@ default_checkbox_states = {
     "ESP": False,
     "HCO3": False,
     "HM": False,
-    "Mo": False,
-    "NH4-N": True,
     "Ni": False,
-    "OC": True,
     "RZM": False,
-    "Si": True,
     "Slake": False,
-    "SO4-S": True,
     "TN": False,
     "TOC": False,
+    "K&#58;B": False,
+    "K&#58;Mg": False,
+    "K&#58;Na": False,
+    "Mn&#58;Cu": False,
+    "Mn&#58;Zn": False,
+    "P&#58;Cu": False,
+    "P&#58;Zn": False,
+    "P&#58;S": False,
+    "P&#58;Mn": False,
+    "Zn&#58;Cu": False,
+    "CaCO3": False,
+    "ENR": False,
+    "EC": False,
+    "Moisture": False,
 }
 
-# Place checkboxes in the columns
-selected_columns = {}
-for column in filtered_soil_test_data.columns:
-    if column != "SampleNumber":
-        selected_columns[column] = checkbox_columns[column_counter].checkbox(column, value=default_checkbox_states.get(column, True))
-        column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
+# Define unique default min/max values for each column
+default_min_max_values = {
+    "CEC": (10, 40),
+    "OM": (1, 6),
+    "pH": (5, 8.5),
+    "BpH": (5.5, 7.5),
+    "H_Meq": (0, 100),
+    "pct H": (25,70),
+    "pct K": (0, 10),
+    "pct Ca": (10, 95),
+    "pct Mg": (0.5, 10),
+    "pct Na": (0, 5),
+    "Cu": (0.2, 10),
+    "K": (20, 100),
+    "S": (0, 40),
+    "Mg": (0, 600),
+    "Ca": (50, 400),
+    "B": (0.1, 4.0),
+    "Zn": (0.2, 10),
+    "Fe": (10, 50),
+    "Mn": (0, 30),
+    "NO3-N": (10, 100),
+    "Cl": (0, 50),
+    "Mo": (0.1, 0.5),
+    "Na": (0, 50),
+    "AC": (35, 100),
+    "NH4-N": (5, 50),
+    "OC": (1, 5),
+    "Si": (5, 15),
+    "SO4-S": (5, 20),
+    "BD": (1, 2),
+    "SS": (0.1, 2),
+    "CO3": (0.1, 1),
+    "AdjSAR": (5, 25),
+    "Al": (1, 5),
+    "BS": (0, 100),
+    "ECAP": (0.5, 5),
+    "EKP": (100, 500),
+    "EMgP": (50, 400),
+    "ESP": (2, 8),
+    "HCO3": (0.1, 5),
+    "HM": (0, 50),
+    "Ni": (5, 30),
+    "RZM": (50, 70),
+    "Slake": (50, 80),
+    "TN": (0.1, 0.5),
+    "TOC": (0.3, 3),
+    "K&#58;B": (100, 600),
+    "K&#58;Mg": (0.1, 3),
+    "K&#58;Na": (0, 10),
+    "Mn&#58;Cu": (0, 100),
+    "Mn&#58;Zn": (20, 100),
+    "P&#58;Cu": (0, 10),
+    "P&#58;Zn": (0, 10),
+    "P&#58;S": (0, 10),
+    "P&#58;Mn": (0, 1),
+    "Zn&#58;Cu": (0, 6),
+    "CaCO3": (1, 2),
+    "P": (10, 20),
+    "ENR": (1,100),
+    "EC": (.2,2),
+    "Moisture": (1,20),
+}
+
+# Define default units for each column
+default_units = {
+    "CEC": ["meq/100g"],
+    "OM": ["%"],
+    "pH": ["None"],
+    "BpH": ["None"],
+    "H_Meq": ["meq/100g"],
+    "pct H": ["%"],
+    "pct K": ["%", "meq/100g"],
+    "pct Ca": ["%", "meq/100g"],
+    "pct Mg": ["%", "meq/100g"],
+    "pct Na": ["%", "meq/100g"],
+    "Cu": ["ppm", "lbs/ac"],
+    "K": ["ppm", "lbs/ac"],
+    "S": ["ppm", "lbs/ac"],
+    "Mg": ["ppm", "lbs/ac"],
+    "Ca": ["ppm", "lbs/ac"],
+    "B": ["ppm", "lbs/ac"],
+    "Zn": ["ppm", "lbs/ac"],
+    "Fe": ["ppm", "lbs/ac"],
+    "Mn": ["ppm", "lbs/ac"],
+    "NO3-N": ["ppm"],
+    "Cl": ["ppm"],
+    "Mo": ["ppm", "lbs/ac"],
+    "Na": ["ppm", "lbs/ac"],
+    "AC": ["meq/100g"],
+    "NH4-N": ["ppm", "lbs/ac"],
+    "OC": ["%"],
+    "Si": ["ppm", "lbs/ac"],
+    "SO4-S": ["ppm", "lbs/ac"],
+    "BD": ["g/cm³"],
+    "SS": ["None"],
+    "CO3": ["meq/100g"],
+    "AdjSAR": ["None"],
+    "Al": ["ppm", "lbs/ac"],
+    "BS": ["%"],
+    "ECAP": ["dS/m"],
+    "EKP": ["None"],
+    "EMgP": ["None"],
+    "ESP": ["%"],
+    "HCO3": ["meq/L"],
+    "HM": ["%"],
+    "Ni": ["ppm", "lbs/ac"],
+    "RZM": ["None"],
+    "Slake": ["None"],
+    "TN": ["%"],
+    "TOC": ["%"],
+    "K&#58;B": ["None"],
+    "K&#58;Mg": ["None"],
+    "K&#58;Na": ["None"],
+    "Mn&#58;Cu": ["None"],
+    "Mn&#58;Zn": ["None"],
+    "P&#58;Cu": ["None"],
+    "P&#58;Zn": ["None"],
+    "P&#58;S": ["None"],
+    "P&#58;Mn": ["None"],
+    "Zn&#58;Cu": ["None"],
+    "CaCO3": ["%"],
+    "P": ["ppm", "lbs/ac"],
+    "ENR": ["lbs/ac"],
+    "EC": ["mmhos/cm"],
+    "Moisture": ["%"]
+}
+
+with st.expander("Specify analysis and sample ranges", expanded=False):
+    min_sample_id, max_sample_id = st.slider("Set Number Range:", 1, 500, (1, 35))
+    
+    # Initialize selected_columns dictionary
+    selected_columns = {}
+    column_units = {}
+    
+    # Calculate the number of columns needed
+    num_columns = 6
+    
+    # Create the columns
+    checkbox_columns = st.columns(num_columns)
+    
+    # Initialize a counter for the current column
+    column_counter = 0
+
+    # Place checkboxes in the columns for each selected column
+    for column in default_checkbox_states.keys():
+        with checkbox_columns[column_counter].container():
+            selected = st.checkbox(column, value=default_checkbox_states.get(column, True))
+            selected_columns[column] = selected
+            column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
+
+    # Reset the column counter for the next loop
+    column_counter = 0
+
+
+    # Place unit selections in the columns for each selected column
+    for column, selected in selected_columns.items():
+        if selected:
+            with checkbox_columns[column_counter].container():
+                default_unit_options = default_units.get(column, ["ppm", "lbs/ac"])
+                unit = st.selectbox(f"{column} units", default_unit_options)
+                column_units[column] = unit
+                column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
+
+with st.expander("Specify sample depth information", expanded=False):
+    # Dropdown to select the number of depths sampled
+    depth_unit = st.selectbox("Select Depth Units:", ["in", "cm"])
+    num_depths = st.selectbox("Select the # of unique depths for each sample.", [1, 2, 3, 4, 5, 6], key='num_depths', index=0)
+
+    # Input boxes for the maximum depth for topsoil and subsoils
+    cols = st.columns(num_depths)
+    for i in range(num_depths):
+        with cols[i]:
+            if i == 0:
+                st.write(f'<span style="color: #f67b21">Topsoil</span>', unsafe_allow_html=True)
+            else:
+                st.write(f'<span style="color: #f67b21">Subsoil {i}</span>', unsafe_allow_html=True)
+            if depth_unit == "Inches":
+                max_depth = st.number_input(f"Depth ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
+            else:
+                max_depth = st.number_input(f"Depth {i} ({depth_unit}):", key=f"max_depth_{i}", value=default_depths[i+1])
+            max_depths.append(max_depth)
+            depth_refs.append({
+                "DepthID": i+1 if i > 0 else 1,
+                "StartingDepth": int(max_depths[i]),
+                "EndingDepth": int(max_depth),
+                "ColumnDepth": int(max_depth) - int(max_depths[i]),
+                "DepthUnit": depth_unit.lower()
+            })
+
+# Check if the data already exists in the st.session_state, otherwise create and populate a new DataFrame
+if 'data' not in st.session_state:
+    data = pd.DataFrame(index=range(min_sample_id, max_sample_id + 1), columns=[col for col, selected in selected_columns.items() if selected])
+    st.session_state.data = data
+else:
+    data = st.session_state.data
+
+# Add a button to generate random values
+if st.button("Generate Random Values"):
+    for column in data.columns:
+        if column != 'SampleNumber':  # Skip the 'SampleNumber' column
+            min_value, max_value = default_min_max_values[column]
+            st.session_state.data[column] = np.random.uniform(min_value, max_value, size=len(data))
+
+# Add the 'SampleNumber' column with values from min_sample_id to max_sample_id
+if 'data' not in st.session_state or min_sample_id != st.session_state.get('min_sample_id', None) or max_sample_id != st.session_state.get('max_sample_id', None):
+    data = pd.DataFrame(index=range(min_sample_id, max_sample_id + 1), columns=[col for col, selected in selected_columns.items() if selected])
+    data['SampleNumber'] = range(min_sample_id, max_sample_id + 1)
+
+    # Reorder the columns to place 'SampleNumber' as the first column
+    columns = ['SampleNumber'] + [col for col in data.columns if col != 'SampleNumber']
+    data = data[columns]
+
+    # Save the DataFrame to the session state
+    st.session_state.data = data
+
+    # Save the min_sample_id and max_sample_id to the session state
+    st.session_state.min_sample_id = min_sample_id
+    st.session_state.max_sample_id = max_sample_id
+else:
+    data = st.session_state.data
+
+# Display data editor
+edited_data = st.experimental_data_editor(st.session_state.data)
 
 # ModusResult metadata
 event_date = str(datetime.date.today())
@@ -143,57 +315,6 @@ processed_date = str(datetime.date.today())
 
 # Initialize xml_strings for all samples
 xml_strings = ""
-
-value_units = {
-    "BD": "grams/mL",
-    "SS": "mmhos/cm",
-    "CO3": "meq/L",
-    "CEC": "meq/100g",
-    "OM": "%",
-    "pH": "none",
-    "BpH": "none",
-    "H_Meq": "meq/100g",
-    "pct H": "%",
-    "pct K": "%",
-    "pct Ca": "%",
-    "pct Mg": "%",
-    "pct Na": "%",
-    "Cu": "ppm",
-    "P Mehlich III (lbs)": "ppm",
-    "P Bray I ": "ppm",
-    "K ": "ppm",
-    "S ": "ppm",
-    "Mg ": "ppm",
-    "Ca ": "ppm",
-    "B ": "ppm",
-    "Zn ": "ppm",
-    "Fe ": "ppm",
-    "Mn ": "ppm",
-    "NO3-N ": "ppm",
-    "Cl ": "ppm",
-    "Mo ": "ppm",
-    "Na ": "ppm",
-    "AC": "meq/100 g",
-    "AdjSAR": "meq/L",
-    "Al": "meq/100g",
-    "BS": "%",
-    "ECAP": "dS/m",
-    "EKP": "ppm",
-    "EMgP": "ppm",
-    "ESP": "none",
-    "HCO3": "meq/L",
-    "HM": "%",
-    "Mo": "ppm",
-    "NH4-N": "ppm",
-    "Ni": "ppm",
-    "OC": "%",
-    "RZM": "%",
-    "Si": "ppm",
-    "Slake": "%",
-    "SO4-S": "ppm",
-    "TN": "%",
-    "TOC": "%",
-}
 
 value_desc = {
     "CEC": "VL",
@@ -300,7 +421,7 @@ for depth_ref in depth_refs:
 xml_string += "</DepthRefs>\n"
 xml_strings += xml_string
 
-for index, row in edited_soil_test_data.iterrows():
+for index, row in edited_data.iterrows():
     # Nutrient results for current sample
     xml_string = "<SoilSample>\n"
     xml_string += "<SampleMetaData>\n"
@@ -314,10 +435,10 @@ for index, row in edited_soil_test_data.iterrows():
         xml_string += f"<Depth DepthID=\"{depth_ref['DepthID']}\">\n"  # Add the Depth opening tag
         xml_string += "<NutrientResults>\n"  # Add the NutrientResults opening tag
 
-        for nutrient in filtered_soil_test_data.columns:
+        for nutrient in edited_data:
             if nutrient not in ['ID', 'SampleNumber'] and selected_columns[nutrient]:
                 nutrient_value = row[nutrient]
-                nutrient_unit = value_units.get(nutrient, unit.lower())
+                nutrient_unit = column_units.get(nutrient, unit.lower())
                 nutrient_value_desc = value_desc.get(nutrient, "VL")
 
                 xml_string += f"  <NutrientResult>\n"
