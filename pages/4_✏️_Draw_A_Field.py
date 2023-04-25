@@ -49,12 +49,23 @@ def save_geojson_to_kml(all_drawings, filename):
             kml.newpolygon(name=f"Polygon {idx}", outerboundaryis=list(polygon.exterior.coords))
     return kml.kml()
 
-
 st.title("✏️ Draw a Field")
-st.markdown("""
-1. Navigate to your field on the map and draw a field boundary using the map tools.
-2. Once complete, click the appropriate button to save your drawn polygons.
-""")
+
+# Create an expander for the instructions
+instructions_expander = st.expander("Click for instructions", expanded=False)
+with instructions_expander:
+    st.markdown("""
+    **Objective:** Draw a field boundary and save its boundary file.
+
+    1. **Navigate** to your field on the map.
+    2. **Draw a field boundary** using the map tools.
+    3. When finished, click the appropriate button to **save your drawn field boundary**.
+
+    💡 **Tip:** If you click '**Save for Sampling**', you can utilize the field boundary in the **📍 Create Sampling Points** application.
+    """, unsafe_allow_html=True)
+
+# Create an empty placeholder for the buttons
+buttons_placeholder = st.empty()
 
 # Save buttons in columns
 col1, col2, col3, col4 = st.columns(4)
