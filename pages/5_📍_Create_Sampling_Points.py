@@ -44,7 +44,7 @@ def save_geojson_to_shapefile(all_drawings, filename):
 st.title("📍 Create Sampling Points")
 
 # Create an expander for the instructions
-instructions_expander = st.expander("Instructions", expanded=False)
+instructions_expander = st.expander("Click for instructions", expanded=False)
 with instructions_expander:
     st.markdown("""
     - Find your field using the map and drop points using the **Point** tool on the map.
