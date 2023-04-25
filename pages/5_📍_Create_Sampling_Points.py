@@ -49,15 +49,12 @@ with instructions_expander:
     st.markdown("""
     **Objective:** Drop sample points within your field.
 
-    💡 **Tip:**  If you have saved a **boundary** on the **✏️ Draw a Field** page, it will be displayed on the map for easier reference. The map will be centered and zoomed to the field's location.
+    💡 **Tip:** If you have saved a **boundary** on the **✏️ Draw a Field** page, it will be displayed on the map for easier reference. The map will be centered and zoomed to the field's location.
 
     1. **Find your field** on the map.
     2. **Drop points** using the **Point** tool on the map.
     3. When finished, click **Save to Shapefile** and download your resulting .zip containing your points.
     """, unsafe_allow_html=True)
-
-# Create an empty placeholder for the buttons
-buttons_placeholder = st.empty()
 
 # Calculate the bounding box of the saved polygons
 def get_polygon_bounds(polygon_features):
@@ -116,13 +113,32 @@ if 'saved_geography' in st.session_state:
             )
             polygon.add_to(m)
 
+# Create an empty placeholder for the buttons
+col1, col2 = st.columns(2)
+buttons_placeholder1 = col1.empty()
+buttons_placeholder2 = col2.empty()
+
 # Display the map without columns
 returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
 
 # Show the buttons above the map
-if buttons_placeholder.button("Save to Shapefile"):
+save_to_shapefile_button = buttons_placeholder1.button("Save to Shapefile", key="save_to_shapefile_button")
+remove_field_button = buttons_placeholder2.button("Remove field", key="remove_field_button")
+
+if save_to_shapefile_button:
     if returned_objects and isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
         shapefile_data = save_geojson_to_shapefile(returned_objects['all_drawings'], "SamplePoints")
-        buttons_placeholder.download_button("Download Shapefile", shapefile_data, "GeoMaker_Point_Shapefile.zip", "application/zip")
+        buttons_placeholder1.download_button("Download Shapefile", shapefile_data, "GeoMaker_Point_Shapefile.zip", "application/zip")
     else:
         st.warning("No markers found. Please add markers to the map.")
+
+if remove_field_button:
+    if 'saved_geography' in st.session_state:
+        del st.session_state.saved_geography
+        st.experimental_rerun()
+
+# Disable the 'Remove field' button if there is no field on the map
+if not ('saved_geography' in st.session_state and st.session_state.saved_geography):
+    remove_field_button = False
+    buttons_placeholder2.button("Remove field", disabled=True, key="remove_field_button_disabled")
+
