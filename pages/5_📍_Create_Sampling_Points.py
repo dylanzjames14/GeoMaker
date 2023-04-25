@@ -49,7 +49,7 @@ with instructions_expander:
     st.markdown("""
     **Objective:** Drop sample points within your field.
 
-    Tip:  If you have saved a **boundary** on the **✏️ Draw a Field** page, it will be displayed on the map for easier reference. The map will be centered and zoomed to the field's location.
+    💡 **Tip:**  If you have saved a **boundary** on the **✏️ Draw a Field** page, it will be displayed on the map for easier reference. The map will be centered and zoomed to the field's location.
 
     1. **Find your field** on the map.
     2. **Drop points** using the **Point** tool on the map.
