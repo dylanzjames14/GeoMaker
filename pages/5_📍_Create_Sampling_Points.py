@@ -47,10 +47,14 @@ st.title("📍 Create Sampling Points")
 instructions_expander = st.expander("Click for instructions", expanded=False)
 with instructions_expander:
     st.markdown("""
-    - Find your field using the map and drop points using the **Point** tool on the map.
-    - If you have saved a field boundary on the '✏️ Draw a field' page, it will be displayed on the map. The map will be centered and zoomed to the field's location.
-    - Once complete, click **Save to Shapefile** and download your resulting .zip containing your points.
-    """)
+    **Objective:** Drop sample points within your field.
+
+    Tip:  If you have saved a **boundary** on the **✏️ Draw a Field** page, it will be displayed on the map for easier reference. The map will be centered and zoomed to the field's location.
+
+    1. **Find your field** on the map.
+    2. **Drop points** using the **Point** tool on the map.
+    3. When finished, click **Save to Shapefile** and download your resulting .zip containing your points.
+    """, unsafe_allow_html=True)
 
 # Create an empty placeholder for the buttons
 buttons_placeholder = st.empty()
@@ -111,8 +115,6 @@ if 'saved_geography' in st.session_state:
                 style_function=lambda x: {"fillColor": "blue", "color": "blue", "weight": 2},
             )
             polygon.add_to(m)
-else:
-    st.warning("No saved polygons found. Please draw and save a polygon on the other page.")
 
 # Display the map without columns
 returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
