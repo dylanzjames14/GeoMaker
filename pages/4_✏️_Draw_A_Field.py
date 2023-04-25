@@ -57,10 +57,11 @@ st.markdown("""
 """)
 
 # Save buttons in columns
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 save_shapefile_button = col1.button("Save to Shapefile")
 save_kml_button = col2.button("Save KML")
 save_geojson_button = col3.button("Save GEOJSON")
+save_for_sampling_button = col4.button("Save for Sampling")
 
 m = folium.Map(
     location=[36.1256, -97.0665],
@@ -107,3 +108,10 @@ if save_geojson_button:
         col3.download_button("Download GEOJSON", geojson_data, "Drawn_Polygons.geojson", "application/geo+json")
     else:
         col3.warning("No polygons found. Please draw polygons on the map.")
+
+if save_for_sampling_button:
+    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
+        st.session_state.saved_geography = returned_objects['all_drawings']
+        st.success("Geography saved for sampling.")
+    else:
+        st.warning("No polygons found. Please draw polygons on the map.")
