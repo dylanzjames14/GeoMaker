@@ -683,7 +683,7 @@ with xml_validator_expander:
             return False, str(e)
 
     # Upload the XML file
-    uploaded_file = st.file_uploader("", type="xml")
+    uploaded_file = st.file_uploader("Upload your file to see if it's a valid Modus file.", type="xml")
     if uploaded_file is not None:
         xml_data = uploaded_file.read()
 
