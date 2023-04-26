@@ -500,6 +500,7 @@ if 'data' not in st.session_state:
 else:
     data = st.session_state.data
 
+
 # Add a button to generate random values
 if st.button("Generate Random Values"):
     for column in data.columns:
@@ -511,7 +512,10 @@ if st.button("Generate Random Values"):
             st.session_state.data[column] = rounded_values
 
 # Add the 'SampleNumber' column with values from min_sample_id to max_sample_id
-if 'data' not in st.session_state or min_sample_id != st.session_state.get('min_sample_id', None) or max_sample_id != st.session_state.get('max_sample_id', None):
+if ('data' not in st.session_state
+    or min_sample_id != st.session_state.get('min_sample_id', None)
+    or max_sample_id != st.session_state.get('max_sample_id', None)
+    or any(selected_columns[col] != st.session_state.selected_columns.get(col, None) for col in selected_columns.keys())):
     data = pd.DataFrame(index=range(min_sample_id, max_sample_id + 1), columns=[col for col, selected in selected_columns.items() if selected])
     data['SampleNumber'] = range(min_sample_id, max_sample_id + 1)
 
@@ -525,6 +529,9 @@ if 'data' not in st.session_state or min_sample_id != st.session_state.get('min_
     # Save the min_sample_id and max_sample_id to the session state
     st.session_state.min_sample_id = min_sample_id
     st.session_state.max_sample_id = max_sample_id
+
+    # Save the selected_columns to the session state
+    st.session_state.selected_columns = selected_columns
 else:
     data = st.session_state.data
 
