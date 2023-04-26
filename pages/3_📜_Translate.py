@@ -27,7 +27,6 @@ if st.button("Translate!"):
             prompt=prompt,
             max_tokens=4000,
             temperature=0.7,  # Adjust the temperature value
-            stop=["\n"],  # Add stop sequences
         )
 
         # Display the translated text
