@@ -29,7 +29,6 @@ if st.button("Translate!"):
             stop=["\n"],  # Add stop sequences
         )
 
-
         # Display the translated text
         translated_text = response["choices"][0]["text"].strip()
         st.success(translated_text)
