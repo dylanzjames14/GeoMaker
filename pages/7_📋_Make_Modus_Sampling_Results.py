@@ -34,7 +34,12 @@ default_checkbox_states = {
     "pct Na": True,
     "Cu": True,
     "K": True,
-    "P": True,
+    "P(B1)": True,
+    "P(B2)": False,
+    "P(Cald)": False,
+    "P(Olsen)": False,
+    "P(M1)": False,
+    "P(M2)": False,
     "S": True,
     "Mg": True,
     "Ca": True,
@@ -82,7 +87,19 @@ default_checkbox_states = {
     "ENR": False,
     "EC": False,
     "Moisture": False,
+    "Humic Matter": False,
 }
+
+# Define unique default ModusTestID values for each column
+default_modus_test_ids = {
+    "P(B1)": "S-P-B1-1:10.01.03",
+    "P(B2)": "S-P-B2-1:10.01.03",
+    "P(Cald)": "S-P-CALD.01.03",
+    "P(Olsen)": "S-P-BIC.01.03",
+    "P(M1)": "S-P-M1.04",
+    "P(M2)": "S-P-M2.04",
+}
+
 
 # Define unique default min/max values for each column
 default_min_max_values = {
@@ -142,10 +159,153 @@ default_min_max_values = {
     "P&#58;Mn": (0, 1),
     "Zn&#58;Cu": (0, 6),
     "CaCO3": (1, 2),
-    "P": (10, 20),
     "ENR": (1,100),
     "EC": (.2,2),
     "Moisture": (1,20),
+    "P(B1)": (1,60),
+    "P(B2)": (1,60),
+    "P(Cald)": (1,60),
+    "P(Olsen)": (1,60),
+    "P(M1)": (1,60),
+    "P(M2)": (1,60),
+    "Humic Matter": (0,5),
+}
+
+default_decimal_precisions = {
+    "CEC": 1,
+    "OM": 1,
+    "pH": 1,
+    "BpH": 1,
+    "H_Meq": 1,
+    "pct H": 1,
+    "pct K": 1,
+    "pct Ca": 1,
+    "pct Mg": 1,
+    "pct Na": 1,
+    "Cu": 1,
+    "K": 1,
+    "S": 1,
+    "Mg": 1,
+    "Ca": 1,
+    "B": 1,
+    "Zn": 1,
+    "Fe": 1,
+    "Mn": 1,
+    "NO3-N": 1,
+    "Cl": 1,
+    "Mo": 1,
+    "Na": 1,
+    "AC": 1,
+    "NH4-N": 1,
+    "OC": 1,
+    "Si": 1,
+    "SO4-S": 1,
+    "BD": 1,
+    "SS": 1,
+    "CO3": 1,
+    "AdjSAR": 1,
+    "Al": 1,
+    "BS": 1,
+    "ECAP": 1,
+    "EKP": 1,
+    "EMgP": 1,
+    "ESP": 1,
+    "HCO3": 1,
+    "HM": 1,
+    "Ni": 1,
+    "RZM": 1,
+    "Slake": 1,
+    "TN": 1,
+    "TOC": 1,
+    "K&#58;B": 1,
+    "K&#58;Mg": 1,
+    "K&#58;Na": 1,
+    "Mn&#58;Cu": 1,
+    "Mn&#58;Zn": 1,
+    "P&#58;Cu": 1,
+    "P&#58;Zn": 1,
+    "P&#58;S": 1,
+    "P&#58;Mn": 1,
+    "Zn&#58;Cu": 1,
+    "CaCO3": 1,
+    "ENR": 1,
+    "EC": 1,
+    "Moisture": 1,
+    "P(B1)": 1,
+    "P(B2)": 1,
+    "P(Cald)": 1,
+    "P(Olsen)": 1,
+    "P(M1)": 1,
+    "P(M2)": 1,
+    "Humic Matter": 1,
+}
+default_decimal_precisions = {
+    "CEC": 1,
+    "OM": 1,
+    "pH": 2,
+    "BpH": 2,
+    "H_Meq": 1,
+    "pct H": 1,
+    "pct K": 1,
+    "pct Ca": 1,
+    "pct Mg": 1,
+    "pct Na": 1,
+    "Cu": 1,
+    "K": 0,
+    "S": 0,
+    "Mg": 1,
+    "Ca": 0,
+    "B": 1,
+    "Zn": 1,
+    "Fe": 0,
+    "Mn": 1,
+    "NO3-N": 1,
+    "Cl": 0,
+    "Mo": 1,
+    "Na": 1,
+    "AC": 1,
+    "NH4-N": 1,
+    "OC": 1,
+    "Si": 1,
+    "SO4-S": 1,
+    "BD": 1,
+    "SS": 1,
+    "CO3": 1,
+    "AdjSAR": 1,
+    "Al": 1,
+    "BS": 1,
+    "ECAP": 1,
+    "EKP": 1,
+    "EMgP": 1,
+    "ESP": 1,
+    "HCO3": 1,
+    "HM": 1,
+    "Ni": 1,
+    "RZM": 1,
+    "Slake": 1,
+    "TN": 1,
+    "TOC": 1,
+    "K&#58;B": 1,
+    "K&#58;Mg": 1,
+    "K&#58;Na": 1,
+    "Mn&#58;Cu": 1,
+    "Mn&#58;Zn": 1,
+    "P&#58;Cu": 1,
+    "P&#58;Zn": 1,
+    "P&#58;S": 1,
+    "P&#58;Mn": 1,
+    "Zn&#58;Cu": 1,
+    "CaCO3": 0,
+    "ENR": 0,
+    "EC": 1,
+    "Moisture": 1,
+    "P(B1)": 0,
+    "P(B2)": 0,
+    "P(Cald)": 0,
+    "P(Olsen)": 0,
+    "P(M1)": 0,
+    "P(M2)": 0,
+    "Humic Matter": 0,
 }
 
 # Define default units for each column
@@ -206,10 +366,69 @@ default_units = {
     "P&#58;Mn": ["None"],
     "Zn&#58;Cu": ["None"],
     "CaCO3": ["%"],
-    "P": ["ppm", "lbs/ac"],
     "ENR": ["lbs/ac"],
     "EC": ["mmhos/cm"],
-    "Moisture": ["%"]
+    "Moisture": ["%"],
+    "P(B1)": ["ppm", "lbs/ac"],
+    "P(B2)": ["ppm", "lbs/ac"],
+    "P(Cald)": ["ppm", "lbs/ac"],
+    "P(Olsen)": ["ppm", "lbs/ac"],
+    "P(M1)": ["ppm", "lbs/ac"],
+    "P(M2)": ["ppm", "lbs/ac"],
+    "Humic Matter": ["%"],
+}
+
+value_desc = {
+    "CEC": "VL",
+    "OM": "VL",
+    "pH": "VL",
+    "BpH": "VL",
+    "H_Meq": "VL",
+    "pct H": "VL",
+    "pct K": "VL",
+    "pct Ca": "VL",
+    "pct Mg": "VL",
+    "pct Na": "VL",
+    "Cu": "VL",
+    "P Mehlich III (lbs)": "VL",
+    "K": "VL",
+    "S": "VL",
+    "Mg": "VL",
+    "Ca": "VL",
+    "B": "VL",
+    "Zn": "VL",
+    "Fe": "VL",
+    "Mn": "VL",
+    "NO3-N": "VL",
+    "Cl": "VL",
+    "Mo": "VL",
+    "Na": "VL",
+    "AC": "VL",
+    "AdjSAR": "VL",
+    "Al": "VL",
+    "BD": "VL",
+    "BS": "VL",
+    "CO3": "VL",
+    "ECAP": "VL",
+    "EKP": "VL",
+    "EMgP": "VL",
+    "ESP": "VL",
+    "HCO3": "VL",
+    "HM": "VL",
+    "Mo": "VL",
+    "NH4-N": "VL",
+    "Ni": "VL",
+    "OC": "VL",
+    "P BINDX": "VL",
+    "RZM": "VL",
+    "SAR": "VL",
+    "Si": "VL",
+    "Slake": "VL",
+    "SO4-S": "VL",
+    "SS": "VL",
+    "TN": "VL",
+    "TOC": "VL",
+    "Humic Matter": "VL",
 }
 
 with st.expander("Specify analysis and sample ranges", expanded=False):
@@ -286,7 +505,10 @@ if st.button("Generate Random Values"):
     for column in data.columns:
         if column != 'SampleNumber':  # Skip the 'SampleNumber' column
             min_value, max_value = default_min_max_values[column]
-            st.session_state.data[column] = np.random.uniform(min_value, max_value, size=len(data))
+            decimal_precision = default_decimal_precisions.get(column, 2)  # Default to 2 decimal places if not specified
+            random_values = np.random.uniform(min_value, max_value, size=len(data))
+            rounded_values = np.round(random_values, decimal_precision)
+            st.session_state.data[column] = rounded_values
 
 # Add the 'SampleNumber' column with values from min_sample_id to max_sample_id
 if 'data' not in st.session_state or min_sample_id != st.session_state.get('min_sample_id', None) or max_sample_id != st.session_state.get('max_sample_id', None):
@@ -318,59 +540,6 @@ processed_date = str(datetime.date.today())
 
 # Initialize xml_strings for all samples
 xml_strings = ""
-
-value_desc = {
-    "CEC": "VL",
-    "OM": "VL",
-    "pH": "VL",
-    "BpH": "VL",
-    "H_Meq": "VL",
-    "pct H": "VL",
-    "pct K": "VL",
-    "pct Ca": "VL",
-    "pct Mg": "VL",
-    "pct Na": "VL",
-    "Cu": "VL",
-    "P Mehlich III (lbs)": "VL",
-    "P Bray I": "VL",
-    "K": "VL",
-    "S": "VL",
-    "Mg": "VL",
-    "Ca": "VL",
-    "B": "VL",
-    "Zn": "VL",
-    "Fe": "VL",
-    "Mn": "VL",
-    "NO3-N": "VL",
-    "Cl": "VL",
-    "Mo": "VL",
-    "Na": "VL",
-    "AC": "VL",
-    "AdjSAR": "VL",
-    "Al": "VL",
-    "BD": "VL",
-    "BS": "VL",
-    "CO3": "VL",
-    "ECAP": "VL",
-    "EKP": "VL",
-    "EMgP": "VL",
-    "ESP": "VL",
-    "HCO3": "VL",
-    "HM": "VL",
-    "Mo": "VL",
-    "NH4-N": "VL",
-    "Ni": "VL",
-    "OC": "VL",
-    "P BINDX": "VL",
-    "RZM": "VL",
-    "SAR": "VL",
-    "Si": "VL",
-    "Slake": "VL",
-    "SO4-S": "VL",
-    "SS": "VL",
-    "TN": "VL",
-    "TOC": "VL",
-}
 
 # Generate ModusResult metadata
 modus_result_metadata = "<ModusResult xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" Version=\"1.0\" xsi:noNamespaceSchemaLocation=\"modus_result.xsd\">\n"
@@ -439,19 +608,28 @@ for index, row in edited_data.iterrows():
         xml_string += "<NutrientResults>\n"  # Add the NutrientResults opening tag
 
         for nutrient in edited_data:
-            if nutrient not in ['ID', 'SampleNumber'] and selected_columns[nutrient]:
+            if nutrient not in ['ID', 'SampleNumber'] and nutrient in selected_columns and selected_columns[nutrient]:
                 nutrient_value = row[nutrient]
                 nutrient_unit = column_units.get(nutrient, unit.lower())
                 nutrient_value_desc = value_desc.get(nutrient, "VL")
 
+                # Use default ModusTestID value if available, otherwise use the current value
+                modus_test_id = default_modus_test_ids.get(nutrient, f"S-{nutrient}-B2-1:7.01.03")
+
+                # Round the nutrient value using the specified decimal precision
+                decimal_precision = default_decimal_precisions.get(nutrient, 2)  # Default to 2 decimal places if not specified
+                rounded_nutrient_value = round(nutrient_value, decimal_precision)
+
                 xml_string += f"  <NutrientResult>\n"
                 xml_string += f"    <Element>{nutrient}</Element>\n"
-                xml_string += f"    <Value>{nutrient_value}</Value>\n"
-                xml_string += f"    <ModusTestID>S-{nutrient}-B2-1:7.01.03</ModusTestID>\n"
+                xml_string += f"    <Value>{rounded_nutrient_value}</Value>\n"
+                xml_string += f"    <ModusTestID>{modus_test_id}</ModusTestID>\n"
                 xml_string += f"    <ValueType>Measured</ValueType>\n"
                 xml_string += f"    <ValueUnit>{nutrient_unit}</ValueUnit>\n"
                 xml_string += f"    <ValueDesc>{nutrient_value_desc}</ValueDesc>\n"
                 xml_string += f"  </NutrientResult>\n"
+
+
 
         xml_string += "</NutrientResults>\n"  # Add the NutrientResults closing tag
         xml_string += "</Depth>\n"  # Add the Depth closing tag
