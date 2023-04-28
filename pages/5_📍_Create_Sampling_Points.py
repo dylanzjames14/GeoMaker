@@ -10,8 +10,36 @@ import fiona
 import os
 from shapely.geometry import Point, mapping
 from shapely.geometry import shape as shapely_shape, MultiPolygon
+import geopandas as gpd
+from pykml import parser
+import requests
+from lxml import etree
+
+if 'uploaded_boundary' not in st.session_state:
+    st.session_state.uploaded_boundary = None
+
+if 'boundary_updated' not in st.session_state:
+    st.session_state.boundary_updated = False
 
 st.set_page_config(layout="wide")
+
+def kml_to_geojson(kml_file):
+    with kml_file as f:
+        kml_str = f.read()
+    kml_doc = parser.fromstring(kml_str)
+    kml_str = etree.tostring(kml_doc, pretty_print=True).decode()
+    kml_str = kml_str.replace("gx:", "")
+    gdf = gpd.read_file(kml_str, driver='KML')
+    geojson = json.loads(gdf.to_json())
+    return geojson
+
+def shapefile_to_geojson(shp_file):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with ZipFile(shp_file) as zip_file:
+            zip_file.extractall(tmpdir)
+        gdf = gpd.read_file(tmpdir)
+    geojson = json.loads(gdf.to_json())
+    return geojson
 
 def save_geojson_to_shapefile(all_drawings, filename):
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -54,7 +82,26 @@ with instructions_expander:
     1. **Find your field** on the map.
     2. **Drop points** using the **Point** tool on the map.
     3. When finished, click **Save to Shapefile** and download your resulting .zip containing your points.
+
     """, unsafe_allow_html=True)
+
+    #File Uploader
+    uploaded_file = st.file_uploader("Upload your zipped shapefile to set the frame to your boundary!", type=["zip"])
+    load_boundary_button = st.button("Load boundary to map")
+
+    if load_boundary_button:
+        if uploaded_file is not None:
+            file_content_type = uploaded_file.type
+            if file_content_type == "application/json":
+                st.session_state.uploaded_boundary = json.load(uploaded_file)
+            elif file_content_type == "application/vnd.google-earth.kml+xml":
+                st.session_state.uploaded_boundary = kml_to_geojson(uploaded_file)
+            elif file_content_type == "application/zip":
+                st.session_state.uploaded_boundary = shapefile_to_geojson(uploaded_file)
+            else:
+                st.error("Unsupported file format. Please upload a GeoJSON, KML, or Shapefile.")
+                
+            st.session_state.boundary_updated = True
 
 # Calculate the bounding box of the saved polygons
 def get_polygon_bounds(polygon_features):
@@ -65,18 +112,32 @@ def get_polygon_bounds(polygon_features):
     multipolygon = MultiPolygon(polygons)
     return multipolygon.bounds
 
-# Set the map's initial location and zoom level based on the saved polygons
+def get_uploaded_boundary_bounds(uploaded_boundary):
+    if not uploaded_boundary:
+        return None
+
+    features = uploaded_boundary["features"]
+    polygons = [shapely_shape(feature['geometry']) for feature in features if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']]
+    if not polygons:
+        return None
+
+    multipolygon = MultiPolygon(polygons)
+    return multipolygon.bounds
+
+# Set the map's initial location and zoom level based on the saved polygons or uploaded boundary
 if 'saved_geography' in st.session_state:
     bounds = get_polygon_bounds(st.session_state.saved_geography)
-    if bounds:
-        min_lon, min_lat, max_lon, max_lat = bounds
-        center_lat = (min_lat + max_lat) / 2
-        center_lon = (min_lon + max_lon) / 2
-        location = [center_lat, center_lon]
-        zoom_start = 15
-    else:
-        location = [36.1256, -97.0665]
-        zoom_start = 10
+elif st.session_state.uploaded_boundary:
+    bounds = get_uploaded_boundary_bounds(st.session_state.uploaded_boundary)
+else:
+    bounds = None
+
+if bounds:
+    min_lon, min_lat, max_lon, max_lat = bounds
+    center_lat = (min_lat + max_lat) / 2
+    center_lon = (min_lon + max_lon) / 2
+    location = [center_lat, center_lon]
+    zoom_start = 15
 else:
     location = [36.1256, -97.0665]
     zoom_start = 10
@@ -113,6 +174,30 @@ if 'saved_geography' in st.session_state:
             )
             polygon.add_to(m)
 
+# Check if there is a polygons uploaded
+if uploaded_file is not None:
+    file_content_type = uploaded_file.type
+    if file_content_type == "application/json":
+        st.session_state.uploaded_boundary = json.load(uploaded_file)
+    elif file_content_type == "application/vnd.google-earth.kml+xml":
+        st.session_state.uploaded_boundary = kml_to_geojson(uploaded_file)
+    elif file_content_type == "application/zip":
+        st.session_state.uploaded_boundary = shapefile_to_geojson(uploaded_file)
+    else:
+        st.error("Unsupported file format. Please upload a GeoJSON, KML, or Shapefile.")
+    
+    st.session_state.boundary_updated = True
+
+if st.session_state.uploaded_boundary and st.session_state.boundary_updated:
+    for feature in st.session_state.uploaded_boundary["features"]:
+        if feature["geometry"]["type"] == "Polygon" or feature["geometry"]["type"] == "MultiPolygon":
+            polygon = folium.GeoJson(
+                data=feature,
+                style_function=lambda x: {"fillColor": "blue", "color": "blue", "weight": 2},
+            )
+            polygon.add_to(m)
+    st.session_state.boundary_updated = False
+
 # Create an empty placeholder for the buttons
 col1, col2 = st.columns(2)
 buttons_placeholder1 = col1.empty()
@@ -141,4 +226,3 @@ if remove_field_button:
 if not ('saved_geography' in st.session_state and st.session_state.saved_geography):
     remove_field_button = False
     buttons_placeholder2.button("Remove field", disabled=True, key="remove_field_button_disabled")
-
