@@ -145,7 +145,7 @@ else:
 m = folium.Map(
     location=location,
     zoom_start=zoom_start,
-    tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+    tiles="https://mt1.google.com/vt/lyrs=y@18&x={x}&y={y}&z={z}",
     attr="Google"
 )
 
