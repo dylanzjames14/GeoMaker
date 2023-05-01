@@ -66,16 +66,6 @@ with instructions_expander:
     💡 **Tip:** If you click '**Save for Sampling**', you can utilize the field boundary in the **📍 Create Sampling Points** application.
     """, unsafe_allow_html=True)
 
-# Create an empty placeholder for the buttons
-buttons_placeholder = st.empty()
-
-# Save buttons in columns
-col1, col2, col3, col4 = st.columns(4)
-save_shapefile_button = col1.button("Save to Shapefile")
-save_kml_button = col2.button("Save KML")
-save_geojson_button = col3.button("Save GEOJSON")
-save_for_sampling_button = col4.button("Save for Sampling")
-
 # Add a geocoder instance
 geolocator = Nominatim(user_agent="myGeocoder")
 
@@ -121,4 +111,40 @@ draw_control.add_to(m)
 # Display the map without columns
 returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
 
-   
+# Create an empty placeholder for the buttons
+buttons_placeholder = st.empty()
+
+# Save buttons in columns
+col1, col2, col3, col4 = st.columns(4)
+save_shapefile_button = col1.button("Save to Shapefile")
+save_kml_button = col2.button("Save KML")
+save_geojson_button = col3.button("Save GEOJSON")
+save_for_sampling_button = col4.button("Save for Sampling")
+
+if save_shapefile_button:
+    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
+        shapefile_data = save_geojson_to_shapefile(returned_objects['all_drawings'], "DrawnPolygons")
+        col1.download_button("Download Shapefile", shapefile_data, "Drawn_Polygons_Shapefile.zip", "application/zip")
+    else:
+        col1.warning("No polygons found. Please draw polygons on the map.")
+
+if save_kml_button:
+    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
+        kml_data = save_geojson_to_kml(returned_objects['all_drawings'], "DrawnPolygons")
+        col2.download_button("Download KML", kml_data, "Drawn_Polygons.kml", "application/vnd.google-earth.kml+xml")
+    else:
+        col2.warning("No polygons found. Please draw polygons on the map.")
+
+if save_geojson_button:
+    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
+        geojson_data = json.dumps({"type": "FeatureCollection", "features": returned_objects['all_drawings']})
+        col3.download_button("Download GEOJSON", geojson_data, "Drawn_Polygons.geojson", "application/geo+json")
+    else:
+        col3.warning("No polygons found. Please draw polygons on the map.")
+
+if save_for_sampling_button:
+    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
+        st.session_state.saved_geography = returned_objects['all_drawings']
+        st.success("Geography saved for sampling.")
+    else:
+        st.warning("No polygons found. Please draw polygons on the map.")
