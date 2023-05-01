@@ -10,3 +10,4 @@ openai
 lxml
 simplekml
 pykml
+geopy
