@@ -10,6 +10,8 @@ import fiona
 import os
 from shapely.geometry import shape as shapely_shape, mapping
 import simplekml
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
 
 st.set_page_config(layout="wide")
 
@@ -74,14 +76,35 @@ save_kml_button = col2.button("Save KML")
 save_geojson_button = col3.button("Save GEOJSON")
 save_for_sampling_button = col4.button("Save for Sampling")
 
+# Add a geocoder instance
+geolocator = Nominatim(user_agent="myGeocoder")
+
+# Add a search box to your app
+search_location = st.text_input("Search for a location:")
+
 m = folium.Map(
     location=[36.1256, -97.0665],
     zoom_start=10,
-    tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+    tiles="https://mt1.google.com/vt/lyrs=y@18&x={x}&y={y}&z={z}",
     attr="Google"
 )
 
-# Customize the options for the Draw plugin
+if search_location:
+    try:
+        location = geolocator.geocode(search_location)
+        if location:
+            st.write(f"Latitude: {location.latitude}, Longitude: {location.longitude}")
+            m = folium.Map(
+                location=[location.latitude, location.longitude],
+                zoom_start=15,
+                tiles="https://mt1.google.com/vt/lyrs=y@18&x={x}&y={y}&z={z}",
+                attr="Google"
+            )
+        else:
+            st.warning("Location not found. Please try another search query.")
+    except GeocoderTimedOut:
+        st.warning("Geocoding service timed out. Please try again.")
+
 draw_options = {
     "position": "topleft",
     "polyline": False,
@@ -96,33 +119,6 @@ draw_control = Draw(export=False, draw_options=draw_options)
 draw_control.add_to(m)
 
 # Display the map without columns
-
 returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
 
-if save_shapefile_button:
-    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
-        shapefile_data = save_geojson_to_shapefile(returned_objects['all_drawings'], "DrawnPolygons")
-        col1.download_button("Download Shapefile", shapefile_data, "Drawn_Polygons_Shapefile.zip", "application/zip")
-    else:
-        col1.warning("No polygons found. Please draw polygons on the map.")
-
-if save_kml_button:
-    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
-        kml_data = save_geojson_to_kml(returned_objects['all_drawings'], "DrawnPolygons")
-        col2.download_button("Download KML", kml_data, "Drawn_Polygons.kml", "application/vnd.google-earth.kml+xml")
-    else:
-        col2.warning("No polygons found. Please draw polygons on the map.")
-
-if save_geojson_button:
-    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
-        geojson_data = json.dumps({"type": "FeatureCollection", "features": returned_objects['all_drawings']})
-        col3.download_button("Download GEOJSON", geojson_data, "Drawn_Polygons.geojson", "application/geo+json")
-    else:
-        col3.warning("No polygons found. Please draw polygons on the map.")
-
-if save_for_sampling_button:
-    if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
-        st.session_state.saved_geography = returned_objects['all_drawings']
-        st.success("Geography saved for sampling.")
-    else:
-        st.warning("No polygons found. Please draw polygons on the map.")
+   
