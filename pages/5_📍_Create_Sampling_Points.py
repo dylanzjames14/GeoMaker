@@ -198,15 +198,15 @@ if st.session_state.uploaded_boundary and st.session_state.boundary_updated:
             polygon.add_to(m)
     st.session_state.boundary_updated = False
 
+# Display the map without columns
+returned_objects = st_folium(m, width='100%', height=800, returned_objects=["all_drawings"])
+
 # Create an empty placeholder for the buttons
 col1, col2 = st.columns(2)
 buttons_placeholder1 = col1.empty()
 buttons_placeholder2 = col2.empty()
 
-# Display the map without columns
-returned_objects = st_folium(m, width='100%', height=800, returned_objects=["all_drawings"])
-
-# Show the buttons above the map
+# Show the buttons below the map
 save_to_shapefile_button = buttons_placeholder1.button("Save to Shapefile", key="save_to_shapefile_button")
 remove_field_button = buttons_placeholder2.button("Remove field", key="remove_field_button")
 
