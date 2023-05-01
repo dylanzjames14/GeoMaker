@@ -204,7 +204,7 @@ buttons_placeholder1 = col1.empty()
 buttons_placeholder2 = col2.empty()
 
 # Display the map without columns
-returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
+returned_objects = st_folium(m, width='100%', height=800, returned_objects=["all_drawings"])
 
 # Show the buttons above the map
 save_to_shapefile_button = buttons_placeholder1.button("Save to Shapefile", key="save_to_shapefile_button")
