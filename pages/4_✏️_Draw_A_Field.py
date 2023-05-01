@@ -109,7 +109,7 @@ draw_control = Draw(export=False, draw_options=draw_options)
 draw_control.add_to(m)
 
 # Display the map without columns
-returned_objects = st_folium(m, width=1000, height=550, returned_objects=["all_drawings"])
+returned_objects = st_folium(m, width=100%, height=550, returned_objects=["all_drawings"])
 
 # Create an empty placeholder for the buttons
 buttons_placeholder = st.empty()
