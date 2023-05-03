@@ -13,7 +13,6 @@ pykml
 geopy
 fiona
 shapely
-tempfile
 requests
 shutil
 pandas
