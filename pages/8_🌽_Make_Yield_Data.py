@@ -14,6 +14,57 @@ import geopandas as gpd
 from pykml import parser
 import requests
 from lxml import etree
+import pandas as pd
+from shapely.geometry import Polygon
+import shutil
+from shapely.affinity import translate
+
+# Functions 
+def get_centroid(polygon):
+    return polygon.centroid
+
+def get_offset(point1, point2):
+    return point1.x - point2.x, point1.y - point2.y
+
+def apply_offset(geometry, offset):
+    return translate(geometry, xoff=offset[0], yoff=offset[1], zoff=0.0)
+
+def make_yield(yield_shapefile_path, field_polygon, reference_centroid):
+    if os.path.exists(yield_shapefile_path):
+        gdf = read_shapefile_from_folder(yield_shapefile_path)
+    else:
+        st.error("Yield shapefile folder not found in the Data directory.")
+        return
+
+    # Calculate the centroid of the field polygon
+    field_centroid = get_centroid(field_polygon)
+
+    # Calculate the offset needed to align the centroids
+    offset = get_offset(reference_centroid, field_centroid)
+
+    # Apply the same offset to all observations in the original shapefile
+    gdf["geometry"] = gdf["geometry"].apply(lambda x: apply_offset(x, offset))
+
+    # Save the new shapefile in a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        gdf.to_file(os.path.join(tmpdir, "new_yield.shp"))
+
+        # Create a zip file containing the shapefile components
+        with BytesIO() as buffer:
+            with ZipFile(buffer, "w") as zip_file:
+                for extension in ["shp", "shx", "dbf", "prj"]:
+                    zip_file.write(os.path.join(tmpdir, f"new_yield.{extension}"), f"new_yield.{extension}")
+            buffer.seek(0)
+            return buffer.read()
+
+def read_shapefile_from_folder(folder_path):
+    # Find the .shp file in the folder (case-insensitive)
+    shapefile_path = next((file for file in os.listdir(folder_path) if file.lower().endswith(".shp")), None)
+    if shapefile_path:
+        gdf = gpd.read_file(os.path.join(folder_path, shapefile_path))
+    else:
+        raise FileNotFoundError("No .shp file found in the shapefile folder.")
+    return gdf
 
 if 'uploaded_boundary' not in st.session_state:
     st.session_state.uploaded_boundary = None
@@ -135,8 +186,8 @@ if bounds:
     location = [center_lat, center_lon]
     zoom_start = 15
 else:
-    location = [36.1256, -97.0665]
-    zoom_start = 10
+        location = [36.1256, -97.0665]
+        zoom_start = 10
 
 m = folium.Map(
     location=location,
@@ -159,7 +210,6 @@ draw_options = {
 draw_control = Draw(export=False, draw_options=draw_options)
 draw_control.add_to(m)
 
-
 # Check if there is a polygon saved in the session state
 if 'saved_geography' in st.session_state:
     # Add the saved polygons to the map
@@ -181,20 +231,14 @@ if st.session_state.uploaded_boundary:
 #Display the map
 st_folium(m, width='100%', height=800)
 
-save_button = st.button("Save to Shapefile")
-if save_button:
-    # Get the drawings from the Draw control
-    all_drawings = draw_control.data
+# Add the 'Make Yield' button at the end of the script
+if st.session_state.uploaded_boundary:
+    field_polygon = Polygon(st.session_state.uploaded_boundary["features"][0]["geometry"]["coordinates"][0])
+    reference_centroid = Point(147.30171288325138, -34.887623172819644)
 
-    if not all_drawings:
-        st.warning("No points were drawn on the map.")
-    else:
-        # Save the drawings to a shapefile
-        shapefile_data = save_geojson_to_shapefile(all_drawings, "YieldPoints")
-        st.download_button(
-            label="Download Shapefile",
-            data=shapefile_data,
-            file_name="YieldPoints.zip",
-            mime="application/zip"
-        )
-
+    if st.button("Make Yield"):
+        yield_shapefile_path = "Data/Yield"
+        new_yield_zip = make_yield(yield_shapefile_path, field_polygon, reference_centroid)
+        if new_yield_zip:
+            st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
+            st.success("Congratulations, your new yield file has been made successfully!")
