@@ -14,5 +14,4 @@ geopy
 fiona
 shapely
 requests
-shutil
-pandas
+
