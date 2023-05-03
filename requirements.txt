@@ -11,3 +11,5 @@ lxml
 simplekml
 pykml
 geopy
+fiona
+shapely
