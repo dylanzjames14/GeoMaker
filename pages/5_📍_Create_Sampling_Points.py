@@ -199,7 +199,7 @@ if st.session_state.uploaded_boundary and st.session_state.boundary_updated:
     st.session_state.boundary_updated = False
 
 # Display the map without columns
-returned_objects = st_folium(m, width='100%', height=800, returned_objects=["all_drawings"])
+returned_objects = st_folium(m, width='100%', height=700, returned_objects=["all_drawings"])
 
 # Create an empty placeholder for the buttons
 col1, col2 = st.columns(2)
