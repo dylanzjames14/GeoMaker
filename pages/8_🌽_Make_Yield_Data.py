@@ -229,7 +229,7 @@ if st.session_state.uploaded_boundary:
     uploaded_boundary.add_to(m)
 
 #Display the map
-st_folium(m, width='100%', height=800)
+st_folium(m, width='100%', height=700)
 
 # Add the 'Make Yield' button at the end of the script
 if st.session_state.uploaded_boundary:
