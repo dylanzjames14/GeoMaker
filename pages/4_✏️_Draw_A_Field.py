@@ -63,7 +63,7 @@ with instructions_expander:
     2. **Draw a field boundary** using the map tools.
     3. When finished, click the appropriate button to **save your drawn field boundary**.
 
-    💡 **Tip:** If you click '**Save for Sampling**', you can utilize the field boundary in the **📍 Create Sampling Points** application.
+    💡 **Tip:** If you click '**Save Field**', you can utilize the field boundary in the **📍 Create Sampling Points** application.
     """, unsafe_allow_html=True)
 
 # Add a geocoder instance
@@ -119,7 +119,7 @@ col1, col2, col3, col4 = st.columns(4)
 save_shapefile_button = col1.button("Save to Shapefile")
 save_kml_button = col2.button("Save KML")
 save_geojson_button = col3.button("Save GEOJSON")
-save_for_sampling_button = col4.button("Save for Sampling")
+save_for_sampling_button = col4.button("Save Field")
 
 if save_shapefile_button:
     if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
