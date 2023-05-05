@@ -12,19 +12,25 @@ from shapely.geometry import Point, mapping
 from shapely.geometry import shape as shapely_shape, MultiPolygon
 import geopandas as gpd
 from pykml import parser
-import requests
 from lxml import etree
 import pandas as pd
 from shapely.geometry import Polygon
-import shutil
 from shapely.affinity import translate
+from shapely.ops import cascaded_union
+
 
 # Functions 
+def get_uploaded_boundary_gdf(uploaded_boundary):
+    if not uploaded_boundary:
+        return None
+    gdf = gpd.GeoDataFrame.from_features(uploaded_boundary["features"], crs="EPSG:4326")
+    return gdf
+
 def get_centroid(polygon):
     return polygon.centroid
 
 def get_offset(point1, point2):
-    return point1.x - point2.x, point1.y - point2.y
+    return point2.x - point1.x, point2.y - point1.y
 
 def apply_offset(geometry, offset):
     return translate(geometry, xoff=offset[0], yoff=offset[1], zoff=0.0)
@@ -41,6 +47,11 @@ def make_yield(yield_shapefile_path, field_polygon, reference_centroid):
 
     # Calculate the offset needed to align the centroids
     offset = get_offset(reference_centroid, field_centroid)
+
+    # Display field centroid, yield centroid, and offset values
+    st.write(f"Field Centroid: {field_centroid.x}, {field_centroid.y}")
+    st.write(f"Yield Centroid: {reference_centroid.x}, {reference_centroid.y}")
+    st.write(f"Offset (x, y): {offset}")
 
     # Apply the same offset to all observations in the original shapefile
     gdf["geometry"] = gdf["geometry"].apply(lambda x: apply_offset(x, offset))
@@ -76,9 +87,7 @@ st.set_page_config(layout="wide")
 
 def kml_to_geojson(kml_file):
     with kml_file as f:
-        kml_str = f.read()
-    kml_doc = parser.fromstring(kml_str)
-    kml_str = etree.tostring(kml_doc, pretty_print=True).decode()
+        kml_str = etree.tostring(kml_doc, pretty_print=True).decode()
     kml_str = kml_str.replace("gx:", "")
     gdf = gpd.read_file(kml_str, driver='KML')
     geojson = json.loads(gdf.to_json())
@@ -119,6 +128,7 @@ def save_geojson_to_shapefile(all_drawings, filename):
                     zip_file.write(os.path.join(tmpdir, f"{filename}.{extension}"), f"YieldPoints.{extension}")
             buffer.seek(0)
             return buffer.read()
+
 st.title("🌽 Create Yield Data")
 st.warning("This application is currently under development. Stay tuned!")
 
@@ -229,16 +239,24 @@ if st.session_state.uploaded_boundary:
     uploaded_boundary.add_to(m)
 
 #Display the map
-st_folium(m, width='100%', height=700)
+st_folium(m, width='100%', height=800)
 
 # Add the 'Make Yield' button at the end of the script
-if st.session_state.uploaded_boundary:
-    field_polygon = Polygon(st.session_state.uploaded_boundary["features"][0]["geometry"]["coordinates"][0])
+uploaded_boundary_gdf = get_uploaded_boundary_gdf(st.session_state.uploaded_boundary)
+if uploaded_boundary_gdf is not None:
+    field_multipolygon = cascaded_union(uploaded_boundary_gdf.geometry)
+    field_centroid = field_multipolygon.representative_point()
+
+
+    st.write("Uploaded boundary GeoJSON:", st.session_state.uploaded_boundary)
+    st.write("Uploaded boundary GeoDataFrame:", uploaded_boundary_gdf)
+
+
     reference_centroid = Point(147.30171288325138, -34.887623172819644)
 
     if st.button("Make Yield"):
         yield_shapefile_path = "Data/Yield"
-        new_yield_zip = make_yield(yield_shapefile_path, field_polygon, reference_centroid)
+        new_yield_zip = make_yield(yield_shapefile_path, uploaded_boundary_gdf.unary_union, reference_centroid)
         if new_yield_zip:
             st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
             st.success("Congratulations, your new yield file has been made successfully!")
