@@ -145,6 +145,6 @@ if save_geojson_button:
 if save_for_sampling_button:
     if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
         st.session_state.saved_geography = returned_objects['all_drawings']
-        st.success("Geography saved for sampling.")
+        st.success("Geography saved for use in sampling or yield pages!")
     else:
         st.warning("No polygons found. Please draw polygons on the map.")
