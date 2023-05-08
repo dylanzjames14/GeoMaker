@@ -247,11 +247,6 @@ if uploaded_boundary_gdf is not None:
     field_multipolygon = cascaded_union(uploaded_boundary_gdf.geometry)
     field_centroid = field_multipolygon.representative_point()
 
-
-    st.write("Uploaded boundary GeoJSON:", st.session_state.uploaded_boundary)
-    st.write("Uploaded boundary GeoDataFrame:", uploaded_boundary_gdf)
-
-
     reference_centroid = Point(147.30171288325138, -34.887623172819644)
 
     if st.button("Make Yield"):
