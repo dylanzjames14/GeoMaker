@@ -128,7 +128,6 @@ def save_geojson_to_shapefile(all_drawings, filename):
             return buffer.read()
 
 st.title("🌽 Create Yield Data")
-st.warning("This application is currently under development. Stay tuned!")
 
 # Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
@@ -136,8 +135,13 @@ with instructions_expander:
     st.markdown("""
     **Objective:** Create yield data for your field.
 
-    💡 **Tip:** If you have saved a **boundary** on the **✏️ Draw a Field** page, it will be displayed on the map for easier reference. The map will be centered and zoomed to the field's location.
+    This application enables you to generate yield data for your field by following these steps:
 
+    1. **Add a field boundary**: You can upload a zipped shapefile of your field boundary using the file uploader below. The application currently supports GeoJSON, KML, and Shapefile formats. If you have already saved a drawn boundary on the **✏️ Draw a Field** page, it will be automatically displayed on the map.
+
+    2. **Generate yield data**: Once you have a boundary, click the "Make Yield" button to generate yield data for your field. The application will create a new shapefile containing the yield data, which you can download by clicking the "Download Shapefile" button.
+
+    💡 **Tip:** If you need to add or modify your field boundary, visit the **✏️ Draw a Field** page and follow the instructions there.
     """, unsafe_allow_html=True)
 
     #File Uploader
@@ -239,6 +243,11 @@ if st.session_state.uploaded_boundary:
 #Display the map
 st_folium(m, width='100%', height=750)
 
+#You have no boundary warn
+if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_boundary is None) and \
+   ('saved_geography' not in st.session_state or not any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
+    st.warning("Please add a boundary to continue. Read instructions for more information.")
+
 # Add the 'Make Yield' button
 if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
    ('saved_geography' in st.session_state and any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
@@ -254,9 +263,11 @@ if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_bounda
     reference_centroid = Point(147.30171288325138, -34.887623172819644)
 
     if st.button("Make Yield"):
-        yield_shapefile_path = "Data/Yield"
-        st.session_state.new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid)
-        if st.session_state.new_yield_zip:
+        with st.spinner("Creating your yield file..."):
+            yield_shapefile_path = "Data/Yield"
+            new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid)
+        if new_yield_zip:
+            st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
             st.success("Congratulations, your new yield file has been made successfully!")
 
 if st.session_state.new_yield_zip:
