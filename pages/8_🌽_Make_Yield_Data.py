@@ -48,11 +48,6 @@ def make_yield(yield_shapefile_path, field_polygon, reference_centroid):
     # Calculate the offset needed to align the centroids
     offset = get_offset(reference_centroid, field_centroid)
 
-    # Display field centroid, yield centroid, and offset values
-    st.write(f"Field Centroid: {field_centroid.x}, {field_centroid.y}")
-    st.write(f"Yield Centroid: {reference_centroid.x}, {reference_centroid.y}")
-    st.write(f"Offset (x, y): {offset}")
-
     # Apply the same offset to all observations in the original shapefile
     gdf["geometry"] = gdf["geometry"].apply(lambda x: apply_offset(x, offset))
 
@@ -82,6 +77,9 @@ if 'uploaded_boundary' not in st.session_state:
 
 if 'boundary_updated' not in st.session_state:
     st.session_state.boundary_updated = False
+
+if 'new_yield_zip' not in st.session_state:
+    st.session_state.new_yield_zip = None
 
 st.set_page_config(layout="wide")
 
@@ -239,19 +237,28 @@ if st.session_state.uploaded_boundary:
     uploaded_boundary.add_to(m)
 
 #Display the map
-st_folium(m, width='100%', height=800)
+st_folium(m, width='100%', height=750)
 
-# Add the 'Make Yield' button at the end of the script
-uploaded_boundary_gdf = get_uploaded_boundary_gdf(st.session_state.uploaded_boundary)
-if uploaded_boundary_gdf is not None:
-    field_multipolygon = cascaded_union(uploaded_boundary_gdf.geometry)
-    field_centroid = field_multipolygon.representative_point()
+# Add the 'Make Yield' button
+if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
+   ('saved_geography' in st.session_state and any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
+    uploaded_boundary_gdf = get_uploaded_boundary_gdf(st.session_state.uploaded_boundary)
+    if uploaded_boundary_gdf is not None:
+        field_multipolygon = cascaded_union(uploaded_boundary_gdf.geometry)
+        field_centroid = field_multipolygon.representative_point()
+
+    else:
+        field_multipolygon = cascaded_union([shapely_shape(feature['geometry']) for feature in st.session_state.saved_geography if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']])
+        field_centroid = field_multipolygon.representative_point()
 
     reference_centroid = Point(147.30171288325138, -34.887623172819644)
 
     if st.button("Make Yield"):
         yield_shapefile_path = "Data/Yield"
-        new_yield_zip = make_yield(yield_shapefile_path, uploaded_boundary_gdf.unary_union, reference_centroid)
-        if new_yield_zip:
-            st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
+        st.session_state.new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid)
+        if st.session_state.new_yield_zip:
             st.success("Congratulations, your new yield file has been made successfully!")
+
+if st.session_state.new_yield_zip:
+    st.download_button("Download Shapefile", st.session_state.new_yield_zip, "Yield_Shapefile.zip")
+
