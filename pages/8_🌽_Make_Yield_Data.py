@@ -35,12 +35,18 @@ def get_offset(point1, point2):
 def apply_offset(geometry, offset):
     return translate(geometry, xoff=offset[0], yoff=offset[1], zoff=0.0)
 
-def make_yield(yield_shapefile_path, field_polygon, reference_centroid):
+def make_yield(yield_shapefile_path, field_polygon, reference_centroid, crop, mass_adjustment):
     if os.path.exists(yield_shapefile_path):
         gdf = read_shapefile_from_folder(yield_shapefile_path)
     else:
         st.error("Yield shapefile folder not found in the Data directory.")
         return
+
+    # Update the 'Crop' column value
+    gdf['Crop'] = crop
+
+    # Apply mass adjustment to 'WetMass' column
+    gdf['WetMass'] = gdf['WetMass'] * mass_adjustment
 
     # Calculate the centroid of the field polygon
     field_centroid = get_centroid(field_polygon)
@@ -83,14 +89,6 @@ if 'new_yield_zip' not in st.session_state:
 
 st.set_page_config(layout="wide")
 
-def kml_to_geojson(kml_file):
-    with kml_file as f:
-        kml_str = etree.tostring(kml_doc, pretty_print=True).decode()
-    kml_str = kml_str.replace("gx:", "")
-    gdf = gpd.read_file(kml_str, driver='KML')
-    geojson = json.loads(gdf.to_json())
-    return geojson
-
 def shapefile_to_geojson(shp_file):
     with tempfile.TemporaryDirectory() as tmpdir:
         with ZipFile(shp_file) as zip_file:
@@ -99,23 +97,23 @@ def shapefile_to_geojson(shp_file):
     geojson = json.loads(gdf.to_json())
     return geojson
 
-def save_geojson_to_shapefile(all_drawings, filename):
+def save_geojson_to_shapefile(all_drawings, filename, crop):
     with tempfile.TemporaryDirectory() as tmpdir:
         # Define schema
         schema = {
-            'geometry': 'Point',
-            'properties': [('Name', 'str'), ('YieldID', 'int')]
+            'geometry': 'Polygon',
+            'properties': [('Name', 'str'), ('Crop', 'str')]
         }
 
         # Open a Fiona object
         shapefile_filepath = os.path.join(tmpdir, f"{filename}.shp")
         with fiona.open(shapefile_filepath, mode='w', driver='ESRI Shapefile', schema=schema, crs="EPSG:4326") as shp_file:
             for idx, feature in enumerate(all_drawings):
-                if feature['geometry']['type'] == 'Point':
-                    point = Point(feature['geometry']['coordinates'])
+                if feature['geometry']['type'] == 'Polygon':
+                    polygon = shapely_shape(feature['geometry'])
                     shape = {
-                        'geometry': mapping(point),
-                        'properties': {'Name': f"Yield {idx}", 'YieldID': idx + 1}
+                        'geometry': mapping(polygon),
+                        'properties': {'Name': f"Polygon {idx}", 'Crop': crop}
                     }
                     shp_file.write(shape)
 
@@ -123,7 +121,7 @@ def save_geojson_to_shapefile(all_drawings, filename):
         with BytesIO() as buffer:
             with ZipFile(buffer, "w") as zip_file:
                 for extension in ["shp", "shx", "dbf", "prj"]:
-                    zip_file.write(os.path.join(tmpdir, f"{filename}.{extension}"), f"YieldPoints.{extension}")
+                    zip_file.write(os.path.join(tmpdir, f"{filename}.{extension}"), f"{filename}.{extension}")
             buffer.seek(0)
             return buffer.read()
 
@@ -240,8 +238,11 @@ if st.session_state.uploaded_boundary:
     )
     uploaded_boundary.add_to(m)
 
-#Display the map
-st_folium(m, width='100%', height=750)
+# Display the map in the first column
+col1, col2 = st.columns(2)
+
+with col1:
+    st_folium(m, width='100%', height=750)
 
 #You have no boundary warn
 if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_boundary is None) and \
@@ -249,27 +250,35 @@ if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_bou
     st.warning("Please add a boundary to continue. Read instructions for more information.")
 
 # Add the 'Make Yield' button
-if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
-   ('saved_geography' in st.session_state and any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
-    uploaded_boundary_gdf = get_uploaded_boundary_gdf(st.session_state.uploaded_boundary)
-    if uploaded_boundary_gdf is not None:
-        field_multipolygon = cascaded_union(uploaded_boundary_gdf.geometry)
-        field_centroid = field_multipolygon.representative_point()
+with col2:
+    crop_input = st.text_input("Enter the crop:")
 
-    else:
-        field_multipolygon = cascaded_union([shapely_shape(feature['geometry']) for feature in st.session_state.saved_geography if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']])
-        field_centroid = field_multipolygon.representative_point()
+    mass_adjustment_input = st.number_input("Enter the mass adjustment (%)", min_value=0, max_value=1000, step=1)
+    mass_adjustment_multiplier = (mass_adjustment_input + 100) / 100
 
-    reference_centroid = Point(147.30171288325138, -34.887623172819644)
+    if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
+    ('saved_geography' in st.session_state and any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
+        uploaded_boundary_gdf = get_uploaded_boundary_gdf(st.session_state.uploaded_boundary)
+        if uploaded_boundary_gdf is not None:
+            field_multipolygon = cascaded_union(uploaded_boundary_gdf.geometry)
+            field_centroid = field_multipolygon.representative_point()
 
-    if st.button("Make Yield"):
-        with st.spinner("Creating your yield file..."):
-            yield_shapefile_path = "Data/Yield"
-            new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid)
-        if new_yield_zip:
-            st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
-            st.success("Congratulations, your new yield file has been made successfully!")
+        else:
+            field_multipolygon = cascaded_union([shapely_shape(feature['geometry']) for feature in st.session_state.saved_geography if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']])
+            field_centroid = field_multipolygon.representative_point()
 
-if st.session_state.new_yield_zip:
-    st.download_button("Download Shapefile", st.session_state.new_yield_zip, "Yield_Shapefile.zip")
+        reference_centroid = Point(147.30171288325138, -34.887623172819644)
 
+        if st.button("Make Yield"):
+            if crop_input:
+                with st.spinner("Creating your yield file..."):
+                    yield_shapefile_path = "Data/Yield"
+                    new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, crop_input, mass_adjustment_multiplier)
+                if new_yield_zip:
+                    st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
+                    st.success("Congratulations, your new yield file has been made successfully!")
+            else:
+                st.warning("Please enter a crop type before proceeding.")
+
+    if st.session_state.new_yield_zip:
+        st.download_button("Download Shapefile", st.session_state.new_yield_zip, "Yield_Shapefile.zip")
