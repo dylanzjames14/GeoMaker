@@ -18,7 +18,7 @@ from shapely.geometry import Polygon
 from shapely.affinity import translate
 from shapely.ops import cascaded_union
 from collections import OrderedDict
-
+from dateutil.parser import parse as parse_date
 
 # Functions 
 def get_uploaded_boundary_gdf(uploaded_boundary):
@@ -36,7 +36,7 @@ def get_offset(point1, point2):
 def apply_offset(geometry, offset):
     return translate(geometry, xoff=offset[0], yoff=offset[1], zoff=0.0)
 
-def make_yield(yield_shapefile_path, field_polygon, reference_centroid, crop, mass_adjustment):
+def make_yield(yield_shapefile_path, field_polygon, reference_centroid, crop, mass_adjustment, selected_date):
     if os.path.exists(yield_shapefile_path):
         gdf = read_shapefile_from_folder(yield_shapefile_path)
     else:
@@ -48,6 +48,12 @@ def make_yield(yield_shapefile_path, field_polygon, reference_centroid, crop, ma
 
     # Apply mass adjustment to 'WetMass' column
     gdf['WetMass'] = gdf['WetMass'] * mass_adjustment
+
+    # If a date has been selected, update the 'Time' and 'IsoTime' columns
+    if selected_date:
+        for column in ["Time", "IsoTime"]:
+            if column in gdf.columns:
+                gdf[column] = gdf[column].apply(lambda x: update_date(x, selected_date))
 
     # Calculate the centroid of the field polygon
     field_centroid = get_centroid(field_polygon)
@@ -69,6 +75,19 @@ def make_yield(yield_shapefile_path, field_polygon, reference_centroid, crop, ma
                     zip_file.write(os.path.join(tmpdir, f"new_yield.{extension}"), f"new_yield.{extension}")
             buffer.seek(0)
             return buffer.read()
+
+def update_date(old_date_str, new_date):
+    # Parse the old date
+    old_date = parse_date(old_date_str)
+
+    # Replace the year, month, and day with the selected date's
+    new_date = old_date.replace(year=new_date.year, month=new_date.month, day=new_date.day)
+
+    # Format the new date according to the format of the old date
+    if "T" in old_date_str:  # IsoTime
+        return new_date.isoformat()[:-3] + "Z"
+    else:  # Time
+        return new_date.strftime("%m/%d/%Y %I:%M:%S %p")
 
 def read_shapefile_from_folder(folder_path):
     # Find the .shp file in the folder (case-insensitive)
@@ -127,6 +146,7 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             return buffer.read()
 
 st.title("🌽 Create Yield Data")
+st.warning("Please note, on larger fields the resulting yield may not fit the extents of your field boundary.")
 
 # Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
@@ -252,8 +272,12 @@ if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_bou
 
 # Add the 'Make Yield' button
 with col2:
+    # Define yield dates
+    selected_date = st.date_input("Harvest date:", value=None)
+    if selected_date:
+        st.session_state.selected_date = selected_date
     # Define the crops and their corresponding IDs
-    crops_dict = {"Canola": 5, "Corn": 174, "Lentils": 8, "Oats": 11, "Soybeans": 173, "Wheat, Hard Red Winter": 216}
+    crops_dict = {"Barley": 11, "Canola": 5, "Corn": 174, "Lentils": 8, "Soybeans": 173, "Wheat, Hard Red Winter": 216}
     # Sort the dictionary alphabetically
     sorted_crops_dict = OrderedDict(sorted(crops_dict.items()))
 
@@ -281,7 +305,8 @@ with col2:
             if selected_crop_name:
                 with st.spinner("Creating your yield file..."):
                     yield_shapefile_path = "Data/Yield"
-                    new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, selected_crop_id, mass_adjustment_multiplier)
+                    # call make_yield function with all the arguments
+                    new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, selected_crop_id, mass_adjustment_multiplier, st.session_state.selected_date)
                 if new_yield_zip:
                     st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
                     st.success("Congratulations, your new yield file has been made successfully!")
