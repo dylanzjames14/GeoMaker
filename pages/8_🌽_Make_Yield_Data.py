@@ -17,6 +17,7 @@ import pandas as pd
 from shapely.geometry import Polygon
 from shapely.affinity import translate
 from shapely.ops import cascaded_union
+from collections import OrderedDict
 
 
 # Functions 
@@ -251,7 +252,14 @@ if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_bou
 
 # Add the 'Make Yield' button
 with col2:
-    crop_input = st.text_input("Enter the crop:")
+    # Define the crops and their corresponding IDs
+    crops_dict = {"Barley": 11, "Canola": 5, "Corn": 174, "Lentils": 8, "Soybeans": 173, "Wheat, Hard Red Winter": 216}
+    # Sort the dictionary alphabetically
+    sorted_crops_dict = OrderedDict(sorted(crops_dict.items()))
+
+    # Get the user's selected crop
+    selected_crop_name = st.selectbox("Select a crop:", list(sorted_crops_dict.keys()))
+    selected_crop_id = sorted_crops_dict[selected_crop_name]  # Get the ID of the selected crop
 
     mass_adjustment_input = st.number_input("Enter the mass adjustment (%)", min_value=0, max_value=1000, step=1)
     mass_adjustment_multiplier = (mass_adjustment_input + 100) / 100
@@ -270,15 +278,15 @@ with col2:
         reference_centroid = Point(147.30171288325138, -34.887623172819644)
 
         if st.button("Make Yield"):
-            if crop_input:
+            if selected_crop_name:
                 with st.spinner("Creating your yield file..."):
                     yield_shapefile_path = "Data/Yield"
-                    new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, crop_input, mass_adjustment_multiplier)
+                    new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, selected_crop_id, mass_adjustment_multiplier)
                 if new_yield_zip:
                     st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
                     st.success("Congratulations, your new yield file has been made successfully!")
             else:
-                st.warning("Please enter a crop type before proceeding.")
+                st.warning("Please select a crop type before proceeding.")
 
     if st.session_state.new_yield_zip:
         st.download_button("Download Shapefile", st.session_state.new_yield_zip, "Yield_Shapefile.zip")
