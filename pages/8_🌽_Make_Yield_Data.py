@@ -277,7 +277,7 @@ with col2:
     if selected_date:
         st.session_state.selected_date = selected_date
     # Define the crops and their corresponding IDs
-    crops_dict = {"Barley": 11, "Canola": 5, "Corn": 174, "Lentils": 8, "Soybeans": 173, "Wheat, Hard Red Winter": 216}
+    crops_dict = {"Canola": 5, "Corn": 174, "Lentils": 8, "Oats": 11, "Soybeans": 173, "Wheat, Hard Red Winter": 216}
     # Sort the dictionary alphabetically
     sorted_crops_dict = OrderedDict(sorted(crops_dict.items()))
 
