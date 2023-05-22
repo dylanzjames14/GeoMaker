@@ -146,7 +146,7 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             return buffer.read()
 
 st.title("🌽 Create Yield Data")
-st.warning("Please note, on larger fields the resulting yield may not fit the extents of your field boundary.")
+st.warning("Please note, on larger fields the resulting yield may not fit the extents of your field boundary. Mass and Moisture adjustments are coming soon. Currently, they are defaulted to low yielding wheat values. You may adjust the mass by %, but currently the controls are limited.")
 
 # Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
