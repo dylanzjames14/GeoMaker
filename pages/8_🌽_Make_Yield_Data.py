@@ -303,7 +303,7 @@ with col2:
 
         if st.button("Make Yield"):
             if selected_crop_name:
-                with st.spinner("Creating your yield file..."):
+                with st.spinner("Creating your yield file. Please be patient, this will take a couple minuites."):
                     yield_shapefile_path = "Data/Yield"
                     # call make_yield function with all the arguments
                     new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, selected_crop_id, mass_adjustment_multiplier, st.session_state.selected_date)
