@@ -174,74 +174,6 @@ default_min_max_values = {
 default_decimal_precisions = {
     "CEC": 1,
     "OM": 1,
-    "pH": 1,
-    "BpH": 1,
-    "H_Meq": 1,
-    "pct H": 1,
-    "pct K": 1,
-    "pct Ca": 1,
-    "pct Mg": 1,
-    "pct Na": 1,
-    "Cu": 1,
-    "K": 1,
-    "S": 1,
-    "Mg": 1,
-    "Ca": 1,
-    "B": 1,
-    "Zn": 1,
-    "Fe": 1,
-    "Mn": 1,
-    "NO3-N": 1,
-    "Cl": 1,
-    "Mo": 1,
-    "Na": 1,
-    "AC": 1,
-    "NH4-N": 1,
-    "OC": 1,
-    "Si": 1,
-    "SO4-S": 1,
-    "BD": 1,
-    "SS": 1,
-    "CO3": 1,
-    "AdjSAR": 1,
-    "Al": 1,
-    "BS": 1,
-    "ECAP": 1,
-    "EKP": 1,
-    "EMgP": 1,
-    "ESP": 1,
-    "HCO3": 1,
-    "HM": 1,
-    "Ni": 1,
-    "RZM": 1,
-    "Slake": 1,
-    "TN": 1,
-    "TOC": 1,
-    "K&#58;B": 1,
-    "K&#58;Mg": 1,
-    "K&#58;Na": 1,
-    "Mn&#58;Cu": 1,
-    "Mn&#58;Zn": 1,
-    "P&#58;Cu": 1,
-    "P&#58;Zn": 1,
-    "P&#58;S": 1,
-    "P&#58;Mn": 1,
-    "Zn&#58;Cu": 1,
-    "CaCO3": 1,
-    "ENR": 1,
-    "EC": 1,
-    "Moisture": 1,
-    "P(B1)": 1,
-    "P(B2)": 1,
-    "P(Cald)": 1,
-    "P(Olsen)": 1,
-    "P(M1)": 1,
-    "P(M2)": 1,
-    "Humic Matter": 1,
-}
-default_decimal_precisions = {
-    "CEC": 1,
-    "OM": 1,
     "pH": 2,
     "BpH": 2,
     "H_Meq": 1,
@@ -434,6 +366,23 @@ value_desc = {
 with st.expander("Specify analysis and sample ranges", expanded=False):
     min_sample_id, max_sample_id = st.slider("Set Number Range:", 1, 500, (1, 35))
     
+    # Create two columns for the buttons
+    button_columns = st.columns(15)
+
+    # Add buttons for selecting/deselecting all checkboxes
+    with button_columns[0]:
+        select_all = st.button('Select All')
+    with button_columns[1]:
+        deselect_all = st.button('Deselect All')
+
+    # Update default_checkbox_states based on button clicks
+    if select_all:
+        for column in default_checkbox_states.keys():
+            default_checkbox_states[column] = True
+    elif deselect_all:
+        for column in default_checkbox_states.keys():
+            default_checkbox_states[column] = False
+    
     # Initialize selected_columns dictionary
     selected_columns = {}
     column_units = {}
@@ -466,6 +415,7 @@ with st.expander("Specify analysis and sample ranges", expanded=False):
                 unit = st.selectbox(f"{column} units", default_unit_options)
                 column_units[column] = unit
                 column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
+
 
 with st.expander("Specify sample depth information", expanded=False):
     # Dropdown to select the number of depths sampled
