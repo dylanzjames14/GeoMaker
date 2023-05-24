@@ -379,9 +379,11 @@ with st.expander("Specify analysis and sample ranges", expanded=False):
     if select_all:
         for column in default_checkbox_states.keys():
             default_checkbox_states[column] = True
+            st.session_state[column] = True  # Save to session state
     elif deselect_all:
         for column in default_checkbox_states.keys():
             default_checkbox_states[column] = False
+            st.session_state[column] = False  # Save to session state
     
     # Initialize selected_columns dictionary
     selected_columns = {}
@@ -399,7 +401,9 @@ with st.expander("Specify analysis and sample ranges", expanded=False):
     # Place checkboxes in the columns for each selected column
     for column in default_checkbox_states.keys():
         with checkbox_columns[column_counter].container():
-            selected = st.checkbox(column, value=default_checkbox_states.get(column, True))
+            if column not in st.session_state:  # Initialize session state for checkbox
+                st.session_state[column] = default_checkbox_states.get(column, True)
+            selected = st.checkbox(column, value=st.session_state[column])
             selected_columns[column] = selected
             column_counter = (column_counter + 1) % num_columns  # Move to the next column, reset to 0 if num_columns is reached
 
@@ -609,7 +613,6 @@ if xml_strings:
     b64 = base64.b64encode(xml_strings.encode()).decode()
     href = f'<a href="data:file/xml;base64,{b64}" download="{filename}">Download Modus XML File</a>'
     st.markdown(href, unsafe_allow_html=True)
-
 
 # Create the expander
 xml_validator_expander = st.expander("✅ Modus file validator", expanded=False)
