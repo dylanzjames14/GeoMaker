@@ -19,10 +19,8 @@ from shapely.affinity import translate
 from shapely.ops import cascaded_union
 from collections import OrderedDict
 from dateutil.parser import parse as parse_date
-import dask_geopandas as dask_gpd
 
 # Functions 
-
 def get_uploaded_boundary_gdf(uploaded_boundary):
     if not uploaded_boundary:
         return None
@@ -90,17 +88,15 @@ def update_date(old_date_str, new_date):
         return new_date.isoformat()[:-3] + "Z"
     else:  # Time
         return new_date.strftime("%m/%d/%Y %I:%M:%S %p")
-    
+
 def read_shapefile_from_folder(folder_path):
     # Find the .shp file in the folder (case-insensitive)
     shapefile_path = next((file for file in os.listdir(folder_path) if file.lower().endswith(".shp")), None)
     if shapefile_path:
-        dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path))
+        gdf = gpd.read_file(os.path.join(folder_path, shapefile_path))
     else:
         raise FileNotFoundError("No .shp file found in the shapefile folder.")
-    return dgdf
-
-dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path), chunksize=10000)
+    return gdf
 
 if 'uploaded_boundary' not in st.session_state:
     st.session_state.uploaded_boundary = None
@@ -281,7 +277,7 @@ with col2:
     if selected_date:
         st.session_state.selected_date = selected_date
     # Define the crops and their corresponding IDs
-    crops_dict = {"Barley": 2, "Canola": 5, "Corn": 174, "Lentils": 8, "Oats": 11, "Soybeans": 173, "Wheat, Hard Red Winter": 11}
+    crops_dict = {"Barley": 2, "Canola": 5, "Corn": 174, "Lentils": 8, "Oats": 11, "Soybeans": 173, "Wheat, Hard Red Winter": 216}
     # Sort the dictionary alphabetically
     sorted_crops_dict = OrderedDict(sorted(crops_dict.items()))
 
