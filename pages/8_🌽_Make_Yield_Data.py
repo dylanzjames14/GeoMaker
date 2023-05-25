@@ -22,7 +22,6 @@ from dateutil.parser import parse as parse_date
 import dask_geopandas as dask_gpd
 
 # Functions 
-dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path), chunksize=10000)
 
 def get_uploaded_boundary_gdf(uploaded_boundary):
     if not uploaded_boundary:
@@ -92,6 +91,8 @@ def update_date(old_date_str, new_date):
     else:  # Time
         return new_date.strftime("%m/%d/%Y %I:%M:%S %p")
 
+dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path), chunksize=10000)
+    
 def read_shapefile_from_folder(folder_path):
     # Find the .shp file in the folder (case-insensitive)
     shapefile_path = next((file for file in os.listdir(folder_path) if file.lower().endswith(".shp")), None)
