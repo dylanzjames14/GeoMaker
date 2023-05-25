@@ -14,5 +14,6 @@ geopy
 fiona
 shapely
 dask-geopandas
+pyogrio
 
 
