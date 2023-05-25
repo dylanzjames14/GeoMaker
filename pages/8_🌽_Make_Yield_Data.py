@@ -22,6 +22,8 @@ from dateutil.parser import parse as parse_date
 import dask_geopandas as dask_gpd
 
 # Functions 
+dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path), chunksize=10000)
+
 def get_uploaded_boundary_gdf(uploaded_boundary):
     if not uploaded_boundary:
         return None
