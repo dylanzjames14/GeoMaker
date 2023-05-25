@@ -90,8 +90,6 @@ def update_date(old_date_str, new_date):
         return new_date.isoformat()[:-3] + "Z"
     else:  # Time
         return new_date.strftime("%m/%d/%Y %I:%M:%S %p")
-
-dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path), chunksize=10000)
     
 def read_shapefile_from_folder(folder_path):
     # Find the .shp file in the folder (case-insensitive)
@@ -101,6 +99,8 @@ def read_shapefile_from_folder(folder_path):
     else:
         raise FileNotFoundError("No .shp file found in the shapefile folder.")
     return dgdf
+
+dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path), chunksize=10000)
 
 if 'uploaded_boundary' not in st.session_state:
     st.session_state.uploaded_boundary = None
