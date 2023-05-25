@@ -19,6 +19,7 @@ from shapely.affinity import translate
 from shapely.ops import cascaded_union
 from collections import OrderedDict
 from dateutil.parser import parse as parse_date
+import dask_geopandas as dask_gpd
 
 # Functions 
 def get_uploaded_boundary_gdf(uploaded_boundary):
@@ -93,10 +94,10 @@ def read_shapefile_from_folder(folder_path):
     # Find the .shp file in the folder (case-insensitive)
     shapefile_path = next((file for file in os.listdir(folder_path) if file.lower().endswith(".shp")), None)
     if shapefile_path:
-        gdf = gpd.read_file(os.path.join(folder_path, shapefile_path))
+        dgdf = dask_gpd.read_file(os.path.join(folder_path, shapefile_path))
     else:
         raise FileNotFoundError("No .shp file found in the shapefile folder.")
-    return gdf
+    return dgdf
 
 if 'uploaded_boundary' not in st.session_state:
     st.session_state.uploaded_boundary = None
