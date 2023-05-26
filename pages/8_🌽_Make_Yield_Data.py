@@ -292,11 +292,13 @@ with col2:
         value=default_value,
         step=1,
     )
+    mass_adjustment = (mass_adjustment_input + 100) / 100
+    
     #You have no boundary warn
     if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_boundary is None) and \
     ('saved_geography' not in st.session_state or not any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
         st.warning("Please add a boundary to continue. Read instructions for more information.")
-        mass_adjustment = (mass_adjustment_input + 100) / 100
+        
 
     if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
     ('saved_geography' in st.session_state and any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
