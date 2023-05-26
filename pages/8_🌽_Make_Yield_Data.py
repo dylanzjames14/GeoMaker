@@ -285,7 +285,20 @@ with col2:
     selected_crop_name = st.selectbox("Select a crop:", list(sorted_crops_dict.keys()))
     selected_crop_id = sorted_crops_dict[selected_crop_name]  # Get the ID of the selected crop
 
-    mass_adjustment_input = st.number_input("Enter the mass adjustment (%)", min_value=0, max_value=1000, step=1)
+    crop_defaults = {"Corn": 750, "Soybeans": 255, "Other": 0}
+
+    # Get the default value for the selected crop
+    default_value = crop_defaults.get(selected_crop_name, 0)
+
+    # Display the slider for mass adjustment
+    mass_adjustment_input = st.slider(
+        "Mass adjustment (%)",
+        min_value=-200,
+        max_value=850,
+        value=default_value,
+        step=1,
+    )
+
     mass_adjustment_multiplier = (mass_adjustment_input + 100) / 100
 
     if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
