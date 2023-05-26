@@ -145,7 +145,7 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             buffer.seek(0)
             return buffer.read()
 
-st.title("🌽 Create Yield Data")
+st.title("🌽 Make Yield Data")
 
 # Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
