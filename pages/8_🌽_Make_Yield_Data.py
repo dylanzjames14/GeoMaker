@@ -296,7 +296,7 @@ with col2:
     if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_boundary is None) and \
     ('saved_geography' not in st.session_state or not any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
         st.warning("Please add a boundary to continue. Read instructions for more information.")
-        mass_adjustment_multiplier = (mass_adjustment_input + 100) / 100
+        mass_adjustment = (mass_adjustment_input + 100) / 100
 
     if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
     ('saved_geography' in st.session_state and any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
@@ -316,7 +316,7 @@ with col2:
                 with st.spinner("Creating your yield file. Please be patient, this will take a couple minutes."):
                     yield_shapefile_path = "Data/Yield"
                     # call make_yield function with all the arguments
-                    new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, selected_crop_id, mass_adjustment_multiplier, st.session_state.selected_date)
+                    new_yield_zip = make_yield(yield_shapefile_path, field_multipolygon, reference_centroid, selected_crop_id, mass_adjustment, st.session_state.selected_date)
                 if new_yield_zip:
                     st.download_button("Download Shapefile", new_yield_zip, "Yield_Shapefile.zip")
                     st.success("Congratulations, your new yield file has been made successfully!")
