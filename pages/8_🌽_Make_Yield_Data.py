@@ -311,7 +311,7 @@ with col2:
             field_multipolygon = cascaded_union([shapely_shape(feature['geometry']) for feature in st.session_state.saved_geography if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']])
             field_centroid = field_multipolygon.representative_point()
 
-        reference_centroid = Point(116.90879019000035, -30.661738459621294)
+        reference_centroid = Point(116.9200525150003, -30.65501315962107)
 
         if st.button("Make Yield"):
             if selected_crop_name:
