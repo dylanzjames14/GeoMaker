@@ -146,7 +146,6 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             return buffer.read()
 
 st.title("🌽 Create Yield Data")
-st.warning("Please note, on larger fields the resulting yield may not fit the extents of your field boundary. Mass and Moisture adjustments are coming soon. Currently, they are defaulted to low yielding wheat values. You may adjust the mass by %, but currently the controls are limited.")
 
 # Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
@@ -265,11 +264,6 @@ col1, col2 = st.columns(2)
 with col1:
     st_folium(m, width='100%', height=750)
 
-#You have no boundary warn
-if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_boundary is None) and \
-   ('saved_geography' not in st.session_state or not any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
-    st.warning("Please add a boundary to continue. Read instructions for more information.")
-
 # Add the 'Make Yield' button
 with col2:
     # Define yield dates
@@ -298,8 +292,11 @@ with col2:
         value=default_value,
         step=1,
     )
-
-    mass_adjustment_multiplier = (mass_adjustment_input + 100) / 100
+    #You have no boundary warn
+    if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_boundary is None) and \
+    ('saved_geography' not in st.session_state or not any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
+        st.warning("Please add a boundary to continue. Read instructions for more information.")
+        mass_adjustment_multiplier = (mass_adjustment_input + 100) / 100
 
     if ('uploaded_boundary' in st.session_state and st.session_state.uploaded_boundary is not None) or \
     ('saved_geography' in st.session_state and any(feature['geometry']['type'] in ['Polygon', 'MultiPolygon'] for feature in st.session_state.saved_geography)):
