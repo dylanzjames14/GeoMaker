@@ -86,7 +86,7 @@ with instructions_expander:
     💡 **Tip:** If you click '**Save Field**', you can utilize the field boundary in the **📍 Create Sampling Points** application.
     """, unsafe_allow_html=True)
 
-zoom_start = 10
+zoom_start = 11
 
 geolocator = Nominatim(user_agent="myGeocoder")
 
@@ -121,7 +121,7 @@ if bounds:
     zoom_start = 15
 else:
     location = [36.1256, -97.0665]
-    zoom_start = 10
+    zoom_start = 11
 
 # Initialize the map
 m = folium.Map(
@@ -154,18 +154,26 @@ if 'saved_geography' in st.session_state:
             )
             polygon.add_to(m)
 
-# Display the map without columns
-returned_objects = st_folium(m, width='100%', height=700, returned_objects=["all_drawings"])
+# Create two columns
+col1, col2 = st.columns([3, 1])
 
-# Create an empty placeholder for the buttons
-buttons_placeholder = st.empty()
+# Place the map in the first column
+with col1:
+    returned_objects = st_folium(m, width='100%', height=650, returned_objects=["all_drawings"])
 
-# Save buttons in columns
-col1, col2, col3, col4 = st.columns(4)
-save_shapefile_button = col1.button("Save to Shapefile")
-save_kml_button = col2.button("Save KML")
-save_geojson_button = col3.button("Save GEOJSON")
-save_for_sampling_button = col4.button("Save Field")
+# Place the buttons in the second column
+with col2:
+    save_shapefile_button = st.button("Save to Shapefile")
+    save_kml_button = st.button("Save KML")
+    save_geojson_button = st.button("Save GEOJSON")
+    save_for_sampling_button = st.button("Save Field")
+    remove_field_button = st.button("Remove field", key="remove_field_button")
+
+# 'Remove field' button action moved outside
+if remove_field_button:
+    if 'saved_geography' in st.session_state:
+        del st.session_state.saved_geography
+        st.experimental_rerun()
 
 if save_shapefile_button or save_kml_button or save_geojson_button or save_for_sampling_button:
     all_drawings = []
@@ -173,7 +181,7 @@ if save_shapefile_button or save_kml_button or save_geojson_button or save_for_s
         all_drawings = returned_objects['all_drawings']
     if 'saved_geography' in st.session_state:
         all_drawings.extend(st.session_state.saved_geography)
-        
+
     if len(all_drawings) > 0:
         if save_shapefile_button:
             shapefile_data = save_geojson_to_shapefile(all_drawings, "DrawnPolygons")
@@ -181,14 +189,14 @@ if save_shapefile_button or save_kml_button or save_geojson_button or save_for_s
 
         if save_kml_button:
             kml_data = save_geojson_to_kml(all_drawings, "DrawnPolygons")
-            col2.download_button("Download KML", kml_data, "Drawn_Polygons.kml", "application/vnd.google-earth.kml+xml")
+            col1.download_button("Download KML", kml_data, "Drawn_Polygons.kml", "application/vnd.google-earth.kml+xml")
 
         if save_geojson_button:
             geojson_data = json.dumps({"type": "FeatureCollection", "features": all_drawings})
-            col3.download_button("Download GEOJSON", geojson_data, "Drawn_Polygons.geojson", "application/geo+json")
+            col1.download_button("Download GEOJSON", geojson_data, "Drawn_Polygons.geojson", "application/geo+json")
 
         if save_for_sampling_button:
             st.session_state.saved_geography = all_drawings
-            st.success("Geography saved for use in sampling or yield pages!")
+            st.success("Geography saved for use on the other pages!")
     else:
         st.warning("No polygons found. Please draw polygons on the map.")
