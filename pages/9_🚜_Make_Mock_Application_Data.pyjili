@@ -152,7 +152,7 @@ st.title("🚜 Make Mock Application Data")
 instructions_expander = st.expander("Click for instructions", expanded=False)
 with instructions_expander:
     st.markdown("""
-    This application enables you to generate application data for your field by following these steps:
+    This application enables you to generate fertilizer application data for your field by following these steps:
 
     1. **Add a field boundary**: If you have already saved a drawn boundary on the **✏️ Draw a Field** page, it will be automatically displayed on the map. You may also upload a zipped boundary using the file uploader below. 
 
@@ -270,7 +270,7 @@ with col2:
     if selected_date:
         st.session_state.selected_date = selected_date
     # Get the user's selected product
-    product_name = st.text_input("Enter a product:", value="")
+    product_name = st.text_input("Enter a fertilizer product:", value="")
 
 
     # Get the default value for the selected crop
