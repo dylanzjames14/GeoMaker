@@ -89,12 +89,20 @@ with instructions_expander:
 zoom_start = 11
 
 geolocator = Nominatim(user_agent="myGeocoder")
-
-location = [36.1256, -97.0665]
-
 search_location = st.text_input("Search for a location:")
 
-# Search location handling
+# Initialize location to default or based on 'saved_geography' in session state
+location = [36.1256, -97.0665]
+if 'saved_geography' in st.session_state:
+    bounds = get_polygon_bounds(st.session_state.saved_geography)
+    if bounds:
+        min_lon, min_lat, max_lon, max_lat = bounds
+        center_lat = (min_lat + max_lat) / 2
+        center_lon = (min_lon + max_lon) / 2
+        location = [center_lat, center_lon]
+        zoom_start = 15
+
+# Override location and zoom if a search location was provided
 if search_location:
     try:
         geo_location = geolocator.geocode(search_location)
@@ -106,22 +114,6 @@ if search_location:
             st.warning("Location not found. Please try another search query.")
     except GeocoderTimedOut:
         st.warning("Geocoding service timed out. Please try again.")
-
-# Set the map's initial location and zoom level based on the saved polygons or uploaded boundary
-if 'saved_geography' in st.session_state:
-    bounds = get_polygon_bounds(st.session_state.saved_geography)
-else:
-    bounds = None
-
-if bounds:
-    min_lon, min_lat, max_lon, max_lat = bounds
-    center_lat = (min_lat + max_lat) / 2
-    center_lon = (min_lon + max_lon) / 2
-    location = [center_lat, center_lon]
-    zoom_start = 15
-else:
-    location = [36.1256, -97.0665]
-    zoom_start = 11
 
 # Initialize the map
 m = folium.Map(
