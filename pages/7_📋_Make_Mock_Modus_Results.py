@@ -60,6 +60,7 @@ default_checkbox_states = {
     "SS": False,
     "CO3": False,
     "AdjSAR": False,
+    "SAR": False,
     "Al": False,
     "BS": False,
     "ECAP": False,
@@ -135,6 +136,7 @@ default_min_max_values = {
     "SS": (0.1, 2),
     "CO3": (0.1, 1),
     "AdjSAR": (5, 25),
+    "SAR": (5, 25),
     "Al": (1, 5),
     "BS": (0, 100),
     "ECAP": (0.5, 5),
@@ -204,6 +206,7 @@ default_decimal_precisions = {
     "SS": 1,
     "CO3": 1,
     "AdjSAR": 1,
+    "SAR": 1,
     "Al": 1,
     "BS": 1,
     "ECAP": 1,
@@ -274,6 +277,7 @@ default_units = {
     "SS": ["None"],
     "CO3": ["meq/100g"],
     "AdjSAR": ["None"],
+    "SAR": ["None"],
     "Al": ["ppm", "lbs/ac"],
     "BS": ["%"],
     "ECAP": ["dS/m"],
@@ -579,7 +583,7 @@ for index, row in edited_data.iterrows():
 
                 # Round the nutrient value using the specified decimal precision
                 decimal_precision = default_decimal_precisions.get(nutrient, 2)  # Default to 2 decimal places if not specified
-                rounded_nutrient_value = round(nutrient_value, decimal_precision)
+                rounded_nutrient_value = format(round(nutrient_value, decimal_precision), f".{decimal_precision}f")
 
                 xml_string += f"  <NutrientResult>\n"
                 xml_string += f"    <Element>{nutrient}</Element>\n"
