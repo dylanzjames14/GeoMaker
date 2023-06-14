@@ -273,7 +273,7 @@ default_units = {
     "OC": ["%"],
     "Si": ["ppm", "lbs/ac"],
     "SO4-S": ["ppm", "lbs/ac"],
-    "BD": ["g/cm³"],
+    "BD": ["g/cm3"],
     "SS": ["None"],
     "CO3": ["meq/100g"],
     "AdjSAR": ["None"],
