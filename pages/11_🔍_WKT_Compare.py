@@ -8,7 +8,7 @@ from shapely.geometry import MultiPolygon
 
 # Setup Streamlit layout
 st.set_page_config(layout="wide")
-st.title('Compare Two WKT Polygons')
+st.title('🔎 Compare WKTs')
 st.markdown("""
     **Instructions:** Paste the Well-Known Text (WKT) for each of the polygons you want to compare in the boxes below.
     The polygons will be displayed on two maps, one for each polygon and the overlapping area.
@@ -19,11 +19,11 @@ col1, col2 = st.columns(2)
 
 # Get WKT from user
 with col1:
-    st.markdown('**Polygon 1:**')
+    st.markdown('**🔵 Polygon 1:**')
     wkt1 = st.text_area('Paste your first WKT here')
 
 with col2:
-    st.markdown('**Polygon 2:**')
+    st.markdown('**🔴 Polygon 2:**')
     wkt2 = st.text_area('Paste your second WKT here')
 
 # Create polygons from WKT and calculate stats
@@ -66,7 +66,8 @@ if wkt1 and wkt2:
     # Fit map to max extents
     m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    folium_static(m1)
+    with col1:
+        folium_static(m1)
 
     # Create second folium map for the overlapping area
     m2 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
@@ -84,7 +85,8 @@ if wkt1 and wkt2:
     # Fit map to max extents
     m2.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    folium_static(m2)
+    with col2:
+        folium_static(m2)
 
     # Calculate stats for each polygon
     with col1:
