@@ -67,19 +67,19 @@ if wkt1 and wkt2:
     with col1:
         st.subheader('🔵 Polygon 1 Stats:')
         for idx, poly in enumerate(polys1):
-            area_acres = poly.area * 0.000247105  # Convert area to acres
-            perimeter_feet = poly.length * 3.28084  # Convert perimeter to feet
-            st.write(f'Area 1-{idx + 1} (acres): {area_acres:.2f} acres')
-            st.write(f'Perimeter 1-{idx + 1} (feet): {perimeter_feet:.2f} feet')
+            area_m2 = poly.area  # Area in square meters
+            perimeter_m = poly.length  # Perimeter in meters
+            st.write(f'Area 1-{idx + 1} (m²): {area_m2:.2f} m²')
+            st.write(f'Perimeter 1-{idx + 1} (meters): {perimeter_m:.2f} meters')
             st.write(f'Bounds 1-{idx + 1}: {poly.bounds}')
 
     with col2:
         st.subheader('🔴 Polygon 2 Stats:')
         for idx, poly in enumerate(polys2):
-            area_acres = poly.area * 0.000247105  # Convert area to acres
-            perimeter_feet = poly.length * 3.28084  # Convert perimeter to feet
-            st.write(f'Area 2-{idx + 1} (acres): {area_acres:.2f} acres')
-            st.write(f'Perimeter 2-{idx + 1} (feet): {perimeter_feet:.2f} feet')
+            area_m2 = poly.area  # Area in square meters
+            perimeter_m = poly.length  # Perimeter in meters
+            st.write(f'Area 2-{idx + 1} (m²): {area_m2:.2f} m²')
+            st.write(f'Perimeter 2-{idx + 1} (meters): {perimeter_m:.2f} meters')
             st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
 
     # Fit map to max extents
@@ -127,9 +127,9 @@ if wkt1 and wkt2:
         else:
             st.write(f"Polygon {idx + 1} does not exist in both groups.")
 
-    # Calculate average percentage differences
+   # Calculate average percentage differences
     avg_area_diff = sum(area_diffs) / len(area_diffs) if area_diffs else 0
     avg_perimeter_diff = sum(perimeter_diffs) / len(perimeter_diffs) if perimeter_diffs else 0
-
     st.write(f'Average difference in area (%): {avg_area_diff:.2f}%')
     st.write(f'Average difference in perimeter (%): {avg_perimeter_diff:.2f}%')
+
