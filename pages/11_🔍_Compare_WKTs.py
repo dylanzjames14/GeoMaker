@@ -72,26 +72,24 @@ if wkt1 and wkt2:
         folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
                        style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
 
-    # Calculate stats for each polygon
+    # Calculate total area and perimeter for each WKT
+    total_area_1 = sum([poly.area for poly in gdf_utm[:len(polys1)]])
+    total_perimeter_1 = sum([poly.length for poly in gdf_utm[:len(polys1)]])
+    total_area_2 = sum([poly.area for poly in gdf_utm[len(polys1):]])
+    total_perimeter_2 = sum([poly.length for poly in gdf_utm[len(polys1):]])
+
+    # Display total area and perimeter for each WKT
     with col1:
         st.subheader('🔵 Polygon 1 Stats:')
-        for idx, poly in enumerate(polys1):
-            poly_utm = gdf_utm[idx]  # Use the projected polygon for calculations
-            area_m2 = poly_utm.area  # Area in square meters
-            perimeter_m = poly_utm.length  # Perimeter in meters
-            st.write(f'Area 1-{idx + 1} (m²): {area_m2:.2f} m²')
-            st.write(f'Perimeter 1-{idx + 1} (meters): {perimeter_m:.2f} meters')
-            st.write(f'Bounds 1-{idx + 1}: {poly.bounds}')
+        st.write(f'Total Area 1 (m²): {total_area_1:.2f} m²')
+        st.write(f'Total Perimeter 1 (meters): {total_perimeter_1:.2f} meters')
+        st.write(f'Bounds 1: {poly1.bounds}')
 
     with col2:
         st.subheader('🔴 Polygon 2 Stats:')
-        for idx, poly in enumerate(polys2):
-            poly_utm = gdf_utm[len(polys1) + idx]  # Use the projected polygon for calculations
-            area_m2 = poly_utm.area  # Area in square meters
-            perimeter_m = poly_utm.length  # Perimeter in meters
-            st.write(f'Area 2-{idx + 1} (m²): {area_m2:.2f} m²')
-            st.write(f'Perimeter 2-{idx + 1} (meters): {perimeter_m:.2f} meters')
-            st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
+        st.write(f'Total Area 2 (m²): {total_area_2:.2f} m²')
+        st.write(f'Total Perimeter 2 (meters): {total_perimeter_2:.2f} meters')
+        st.write(f'Bounds 2: {poly2.bounds}')
 
     # Fit map to max extents
     m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
@@ -122,18 +120,8 @@ if wkt1 and wkt2:
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
-    area_diffs = []
-    perimeter_diffs = []
-    for idx in range(max(len(polys1), len(polys2))):
-        poly1 = gdf_utm[idx] if idx < len(polys1) else None  # Use the projected polygon for calculations
-        poly2 = gdf_utm[len(polys1) + idx] if idx < len(polys2) else None  # Use the projected polygon for calculations
-        if poly1 and poly2:
-            area_diff = abs(poly1.area - poly2.area) / poly1.area * 100
-            perimeter_diff = abs(poly1.length - poly2.length) / poly1.length * 100
-            area_diffs.append(area_diff)
-            perimeter_diffs.append(perimeter_diff)
-            st.write(f'Difference in area {idx + 1} (%): {area_diff:.2f}%')
-            st.write(f'Difference in perimeter {idx + 1} (%): {perimeter_diff:.2f}%')
-            st.write(f'Difference in extent {idx + 1}: {abs(poly1.bounds[2] - poly2.bounds[2])} m in x direction, {abs(poly1.bounds[3] - poly2.bounds[3])} m in y direction')
-        else:
-            st.write(f"Polygon {idx + 1} does not exist in both groups.")
+    area_diff = abs(total_area_1 - total_area_2) / total_area_1 * 100
+    perimeter_diff = abs(total_perimeter_1 - total_perimeter_2) / total_perimeter_1 * 100
+    st.write(f'Difference in total area (%): {area_diff:.2f}%')
+    st.write(f'Difference in total perimeter (%): {perimeter_diff:.2f}%')
+    st.write(f'Difference in extent: {abs(poly1.bounds[2] - poly2.bounds[2])} m in x direction, {abs(poly1.bounds[3] - poly2.bounds[3])} m in y direction')
