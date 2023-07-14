@@ -101,7 +101,7 @@ if wkt1 and wkt2:
     # Fit map to max extents
     m2.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    with col2:
+    with col1:
         st.markdown('**🟢 Overlapping Area of Polygon 1 and 2:**')
         folium_static(m2)
 
