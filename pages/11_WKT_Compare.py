@@ -19,11 +19,11 @@ col1, col2 = st.columns(2)
 
 # Get WKT from user
 with col1:
-    st.markdown('**Polygon 1 (Red):**')
+    st.markdown('**Polygon 1:**')
     wkt1 = st.text_area('Paste your first WKT here')
 
 with col2:
-    st.markdown('**Polygon 2 (Blue):**')
+    st.markdown('**Polygon 2:**')
     wkt2 = st.text_area('Paste your second WKT here')
 
 # Create polygons from WKT and calculate stats
@@ -54,14 +54,14 @@ if wkt1 and wkt2:
     # Create folium map centered on the polygons and zoomed on the extents
     m = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
-    # Add polygons to the map with different colors
+    # Add polygons to the map with different colors and narrower borders
     for idx, poly in enumerate(polys1):
         folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
-                       style_function=lambda x: {'fillColor': 'red', 'color': 'black'}).add_to(m)
+                       style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m)
 
     for idx, poly in enumerate(polys2):
         folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
-                       style_function=lambda x: {'fillColor': 'blue', 'color': 'black'}).add_to(m)
+                       style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m)
 
     # Fit map to max extents
     m.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
