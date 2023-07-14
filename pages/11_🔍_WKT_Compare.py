@@ -127,9 +127,3 @@ if wkt1 and wkt2:
         else:
             st.write(f"Polygon {idx + 1} does not exist in both groups.")
 
-   # Calculate average percentage differences
-    avg_area_diff = sum(area_diffs) / len(area_diffs) if area_diffs else 0
-    avg_perimeter_diff = sum(perimeter_diffs) / len(perimeter_diffs) if perimeter_diffs else 0
-    st.write(f'Average difference in area (%): {avg_area_diff:.2f}%')
-    st.write(f'Average difference in perimeter (%): {avg_perimeter_diff:.2f}%')
-
