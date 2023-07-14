@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import base64
 
 def app():
     st.title('CSV Joiner')
@@ -24,6 +25,10 @@ def app():
 
     # If both CSVs are uploaded and columns are selected
     if csv1 is not None and csv2 is not None:
+        # Convert the columns to the same type before merging
+        df1[column1] = df1[column1].astype(str)
+        df2[column2] = df2[column2].astype(str)
+        
         # Join the two dataframes
         result = pd.merge(df1, df2, left_on=column1, right_on=column2)
         st.write(result)
