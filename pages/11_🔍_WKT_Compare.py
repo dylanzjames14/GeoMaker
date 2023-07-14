@@ -67,15 +67,19 @@ if wkt1 and wkt2:
     with col1:
         st.subheader('🔵 Polygon 1 Stats:')
         for idx, poly in enumerate(polys1):
-            st.write(f'Area 1-{idx + 1} (m²): {poly.area}')
-            st.write(f'Perimeter 1-{idx + 1} (m): {poly.length}')
+            area_acres = poly.area * 0.000247105  # Convert area to acres
+            perimeter_feet = poly.length * 3.28084  # Convert perimeter to feet
+            st.write(f'Area 1-{idx + 1} (acres): {area_acres:.2f} acres')
+            st.write(f'Perimeter 1-{idx + 1} (feet): {perimeter_feet:.2f} feet')
             st.write(f'Bounds 1-{idx + 1}: {poly.bounds}')
 
     with col2:
         st.subheader('🔴 Polygon 2 Stats:')
         for idx, poly in enumerate(polys2):
-            st.write(f'Area 2-{idx + 1} (m²): {poly.area}')
-            st.write(f'Perimeter 2-{idx + 1} (m): {poly.length}')
+            area_acres = poly.area * 0.000247105  # Convert area to acres
+            perimeter_feet = poly.length * 3.28084  # Convert perimeter to feet
+            st.write(f'Area 2-{idx + 1} (acres): {area_acres:.2f} acres')
+            st.write(f'Perimeter 2-{idx + 1} (feet): {perimeter_feet:.2f} feet')
             st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
 
     # Fit map to max extents
