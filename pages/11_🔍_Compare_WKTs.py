@@ -75,20 +75,24 @@ if wkt1 and wkt2:
     # Calculate total area and perimeter for each WKT
     total_area_1 = sum([poly.area for poly in gdf_utm[:len(polys1)]])
     total_perimeter_1 = sum([poly.length for poly in gdf_utm[:len(polys1)]])
+    outer_perimeter_1 = gpd.GeoSeries(polys1).unary_union.boundary.length
     total_area_2 = sum([poly.area for poly in gdf_utm[len(polys1):]])
     total_perimeter_2 = sum([poly.length for poly in gdf_utm[len(polys1):]])
+    outer_perimeter_2 = gpd.GeoSeries(polys2).unary_union.boundary.length
 
-    # Display total area and perimeter for each WKT
+    # Display total area, total and outer perimeter for each WKT
     with col1:
         st.subheader('🔵 Polygon 1 Stats:')
         st.write(f'Total Area 1 (m²): {total_area_1:.2f} m²')
         st.write(f'Total Perimeter 1 (meters): {total_perimeter_1:.2f} meters')
+        st.write(f'Outer Perimeter 1 (meters): {outer_perimeter_1:.2f} meters')
         st.write(f'Bounds 1: {poly1.bounds}')
 
     with col2:
         st.subheader('🔴 Polygon 2 Stats:')
         st.write(f'Total Area 2 (m²): {total_area_2:.2f} m²')
         st.write(f'Total Perimeter 2 (meters): {total_perimeter_2:.2f} meters')
+        st.write(f'Outer Perimeter 2 (meters): {outer_perimeter_2:.2f} meters')
         st.write(f'Bounds 2: {poly2.bounds}')
 
     # Fit map to max extents
@@ -124,4 +128,3 @@ if wkt1 and wkt2:
     perimeter_diff = abs(total_perimeter_1 - total_perimeter_2) / total_perimeter_1 * 100
     st.write(f'Difference in total area (%): {area_diff:.2f}%')
     st.write(f'Difference in total perimeter (%): {perimeter_diff:.2f}%')
-    st.write(f'Difference in extent: {abs(poly1.bounds[2] - poly2.bounds[2])} m in x direction, {abs(poly1.bounds[3] - poly2.bounds[3])} m in y direction')
