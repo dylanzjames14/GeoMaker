@@ -8,7 +8,7 @@ from shapely.geometry import MultiPolygon
 
 # Setup Streamlit layout
 st.set_page_config(layout="wide")
-st.title('Compare Two WKT Polygons')
+st.title('🔍 Compare WKTs')
 st.markdown("""
     **Instructions:** Paste the Well-Known Text (WKT) for each of the polygons you want to compare in the boxes below.
     The polygons will be displayed on a map, and you will receive statistics for each, including area, perimeter, and extent.
