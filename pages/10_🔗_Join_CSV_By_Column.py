@@ -3,7 +3,7 @@ import pandas as pd
 import base64
 
 def app():
-    st.title('CSV Joiner')
+    st.title('🔗 CSV Joiner')
 
     # Upload first CSV
     csv1 = st.file_uploader("Upload first CSV", type=['csv'])
