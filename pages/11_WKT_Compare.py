@@ -22,23 +22,33 @@ if wkt1 and wkt2:
     # Create a GeoSeries from the polygons
     gdf = gpd.GeoSeries([poly1, poly2])
     
-    # Create folium map centered on the polygons
-    m = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=10)
-    
+    # Get the max extents
+    max_bounds = gdf.total_bounds
+
+    # Create folium map centered on the polygons and zoomed on the extents
+    m = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
+
     # Add polygons to the map with different colors
-    folium.GeoJson(poly1, name="Polygon 1", style_function=lambda x: {'fillColor': 'red'}).add_to(m)
-    folium.GeoJson(poly2, name="Polygon 2", style_function=lambda x: {'fillColor': 'blue'}).add_to(m)
+    folium.GeoJson(poly1, name="Polygon 1", 
+                   style_function=lambda x: {'fillColor': 'red', 'color': 'black'}).add_to(m)
+    folium.GeoJson(poly2, name="Polygon 2", 
+                   style_function=lambda x: {'fillColor': 'blue', 'color': 'black'}).add_to(m)
+
+    # Fit map to max extents
+    m.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
     folium_static(m)
 
     # Calculate stats for each polygon
-    col1.metric(label='Area 1 (m²)', value=poly1.area)
-    col1.metric(label='Perimeter 1 (m)', value=poly1.length)
-    col1.metric(label='Bounds 1', value=str(poly1.bounds))
+    col1.write('**Polygon 1 Stats:**')
+    col1.write('Area 1 (m²): ', poly1.area)
+    col1.write('Perimeter 1 (m): ', poly1.length)
+    col1.write('Bounds 1: ', str(poly1.bounds))
 
-    col2.metric(label='Area 2 (m²)', value=poly2.area)
-    col2.metric(label='Perimeter 2 (m)', value=poly2.length)
-    col2.metric(label='Bounds 2', value=str(poly2.bounds))
+    col2.write('**Polygon 2 Stats:**')
+    col2.write('Area 2 (m²): ', poly2.area)
+    col2.write('Perimeter 2 (m): ', poly2.length)
+    col2.write('Bounds 2: ', str(poly2.bounds))
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
