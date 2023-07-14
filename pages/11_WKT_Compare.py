@@ -36,7 +36,7 @@ if wkt1 and wkt2:
 
     # Create a GeoSeries from the polygons
     gdf = gpd.GeoSeries([poly1, poly2])
-    
+
     # Get the max extents
     max_bounds = gdf.total_bounds
 
@@ -44,9 +44,9 @@ if wkt1 and wkt2:
     m = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
     # Add polygons to the map with different colors
-    folium.GeoJson(poly1, name="Polygon 1", 
+    folium.GeoJson(poly1, name="Polygon 1",
                    style_function=lambda x: {'fillColor': 'red', 'color': 'black'}).add_to(m)
-    folium.GeoJson(poly2, name="Polygon 2", 
+    folium.GeoJson(poly2, name="Polygon 2",
                    style_function=lambda x: {'fillColor': 'blue', 'color': 'black'}).add_to(m)
 
     # Fit map to max extents
