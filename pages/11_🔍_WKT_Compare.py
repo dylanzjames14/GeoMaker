@@ -63,7 +63,22 @@ if wkt1 and wkt2:
         folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
                        style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
 
-    # Fit map to max extents
+   # Calculate stats for each polygon
+    with col1:
+        st.subheader('🔵 Polygon 1 Stats:')
+        for idx, poly in enumerate(polys1):
+            st.write(f'Area 1-{idx + 1} (m²): {poly.area}')
+            st.write(f'Perimeter 1-{idx + 1} (m): {poly.length}')
+            st.write(f'Bounds 1-{idx + 1}: {poly.bounds}')
+
+    with col2:
+        st.subheader('🔴 Polygon 2 Stats:')
+        for idx, poly in enumerate(polys2):
+            st.write(f'Area 2-{idx + 1} (m²): {poly.area}')
+            st.write(f'Perimeter 2-{idx + 1} (m): {poly.length}')
+            st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
+   
+   # Fit map to max extents
     m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
     with col1:
@@ -89,21 +104,6 @@ if wkt1 and wkt2:
     with col2:
         st.markdown('**🟢 Overlapping Area of Polygon 1 and 2:**')
         folium_static(m2)
-
-    # Calculate stats for each polygon
-    with col1:
-        st.subheader('🔵 Polygon 1 Stats:')
-        for idx, poly in enumerate(polys1):
-            st.write(f'Area 1-{idx + 1} (m²): {poly.area}')
-            st.write(f'Perimeter 1-{idx + 1} (m): {poly.length}')
-            st.write(f'Bounds 1-{idx + 1}: {poly.bounds}')
-
-    with col2:
-        st.subheader('🔴 Polygon 2 Stats:')
-        for idx, poly in enumerate(polys2):
-            st.write(f'Area 2-{idx + 1} (m²): {poly.area}')
-            st.write(f'Perimeter 2-{idx + 1} (m): {poly.length}')
-            st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
