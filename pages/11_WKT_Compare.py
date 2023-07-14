@@ -32,7 +32,7 @@ if wkt1 and wkt2:
         poly2 = wkt.loads(wkt2)
     except WKTReadingError:
         st.error('Invalid WKT. Please check your inputs.')
-        return
+        st.stop()
 
     # Create a GeoSeries from the polygons
     gdf = gpd.GeoSeries([poly1, poly2])
