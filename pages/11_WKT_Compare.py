@@ -4,6 +4,7 @@ import folium
 from shapely import wkt
 from streamlit_folium import folium_static
 from shapely.errors import WKTReadingError
+from shapely.geometry import MultiPolygon
 
 # Setup Streamlit layout
 st.set_page_config(layout="wide")
@@ -34,8 +35,18 @@ if wkt1 and wkt2:
         st.error('Invalid WKT. Please check your inputs.')
         st.stop()
 
+    if isinstance(poly1, MultiPolygon):
+        polys1 = list(poly1)
+    else:
+        polys1 = [poly1]
+
+    if isinstance(poly2, MultiPolygon):
+        polys2 = list(poly2)
+    else:
+        polys2 = [poly2]
+
     # Create a GeoSeries from the polygons
-    gdf = gpd.GeoSeries([poly1, poly2])
+    gdf = gpd.GeoSeries(polys1 + polys2)
 
     # Get the max extents
     max_bounds = gdf.total_bounds
@@ -44,10 +55,13 @@ if wkt1 and wkt2:
     m = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
     # Add polygons to the map with different colors
-    folium.GeoJson(poly1, name="Polygon 1",
-                   style_function=lambda x: {'fillColor': 'red', 'color': 'black'}).add_to(m)
-    folium.GeoJson(poly2, name="Polygon 2",
-                   style_function=lambda x: {'fillColor': 'blue', 'color': 'black'}).add_to(m)
+    for idx, poly in enumerate(polys1):
+        folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
+                       style_function=lambda x: {'fillColor': 'red', 'color': 'black'}).add_to(m)
+
+    for idx, poly in enumerate(polys2):
+        folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
+                       style_function=lambda x: {'fillColor': 'blue', 'color': 'black'}).add_to(m)
 
     # Fit map to max extents
     m.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
@@ -57,19 +71,26 @@ if wkt1 and wkt2:
     # Calculate stats for each polygon
     with col1:
         st.subheader('Polygon 1 Stats:')
-        st.write('Area 1 (m²): {}'.format(poly1.area))
-        st.write('Perimeter 1 (m): {}'.format(poly1.length))
-        st.write('Bounds 1: {}'.format(poly1.bounds))
+        for idx, poly in enumerate(polys1):
+            st.write(f'Area 1-{idx + 1} (m²): {poly.area}')
+            st.write(f'Perimeter 1-{idx + 1} (m): {poly.length}')
+            st.write(f'Bounds 1-{idx + 1}: {poly.bounds}')
 
     with col2:
         st.subheader('Polygon 2 Stats:')
-        st.write('Area 2 (m²): {}'.format(poly2.area))
-        st.write('Perimeter 2 (m): {}'.format(poly2.length))
-        st.write('Bounds 2: {}'.format(poly2.bounds))
+        for idx, poly in enumerate(polys2):
+            st.write(f'Area 2-{idx + 1} (m²): {poly.area}')
+            st.write(f'Perimeter 2-{idx + 1} (m): {poly.length}')
+            st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
-    st.write('Difference in area (m²): {}'.format(abs(poly1.area - poly2.area)))
-    st.write('Difference in perimeter (m): {}'.format(abs(poly1.length - poly2.length)))
-    st.write('Difference in extent: {} m in x direction, {} m in y direction'.format(
-        abs(poly1.bounds[2] - poly2.bounds[2]), abs(poly1.bounds[3] - poly2.bounds[3])))
+    for idx in range(max(len(polys1), len(polys2))):
+        poly1 = polys1[idx] if idx < len(polys1) else None
+        poly2 = polys2[idx] if idx < len(polys2) else None
+        if poly1 and poly2:
+            st.write(f'Difference in area {idx + 1} (m²): {abs(poly1.area - poly2.area)}')
+            st.write(f'Difference in perimeter {idx + 1} (m): {abs(poly1.length - poly2.length)}')
+            st.write(f'Difference in extent {idx + 1}: {abs(poly1.bounds[2] - poly2.bounds[2])} m in x direction, {abs(poly1.bounds[3] - poly2.bounds[3])} m in y direction')
+        else:
+            st.write(f"Polygon {idx + 1} does not exist in both groups.")
