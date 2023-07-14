@@ -36,12 +36,12 @@ if wkt1 and wkt2:
         st.stop()
 
     if isinstance(poly1, MultiPolygon):
-        polys1 = list(poly1)
+        polys1 = [poly for poly in poly1.geoms]
     else:
         polys1 = [poly1]
 
     if isinstance(poly2, MultiPolygon):
-        polys2 = list(poly2)
+        polys2 = [poly for poly in poly2.geoms]
     else:
         polys2 = [poly2]
 
