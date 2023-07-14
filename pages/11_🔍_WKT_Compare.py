@@ -19,11 +19,11 @@ col1, col2 = st.columns(2)
 
 # Get WKT from user
 with col1:
-    st.markdown('**Polygon 1:**')
+    st.markdown('**🔵 Polygon 1:**')
     wkt1 = st.text_area('Paste your first WKT here')
 
 with col2:
-    st.markdown('**Polygon 2:**')
+    st.markdown('**🔴 Polygon 2:**')
     wkt2 = st.text_area('Paste your second WKT here')
 
 # Create polygons from WKT and calculate stats
