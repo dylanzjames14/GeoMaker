@@ -63,7 +63,7 @@ if wkt1 and wkt2:
         folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
                        style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
 
-   # Calculate stats for each polygon
+    # Calculate stats for each polygon
     with col1:
         st.subheader('🔵 Polygon 1 Stats:')
         for idx, poly in enumerate(polys1):
@@ -77,8 +77,8 @@ if wkt1 and wkt2:
             st.write(f'Area 2-{idx + 1} (m²): {poly.area}')
             st.write(f'Perimeter 2-{idx + 1} (m): {poly.length}')
             st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
-   
-   # Fit map to max extents
+
+    # Fit map to max extents
     m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
     with col1:
@@ -107,12 +107,25 @@ if wkt1 and wkt2:
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
+    area_diffs = []
+    perimeter_diffs = []
     for idx in range(max(len(polys1), len(polys2))):
         poly1 = polys1[idx] if idx < len(polys1) else None
         poly2 = polys2[idx] if idx < len(polys2) else None
         if poly1 and poly2:
-            st.write(f'Difference in area {idx + 1} (m²): {abs(poly1.area - poly2.area)}')
-            st.write(f'Difference in perimeter {idx + 1} (m): {abs(poly1.length - poly2.length)}')
+            area_diff = abs(poly1.area - poly2.area) / poly1.area * 100
+            perimeter_diff = abs(poly1.length - poly2.length) / poly1.length * 100
+            area_diffs.append(area_diff)
+            perimeter_diffs.append(perimeter_diff)
+            st.write(f'Difference in area {idx + 1} (%): {area_diff:.2f}%')
+            st.write(f'Difference in perimeter {idx + 1} (%): {perimeter_diff:.2f}%')
             st.write(f'Difference in extent {idx + 1}: {abs(poly1.bounds[2] - poly2.bounds[2])} m in x direction, {abs(poly1.bounds[3] - poly2.bounds[3])} m in y direction')
         else:
             st.write(f"Polygon {idx + 1} does not exist in both groups.")
+
+    # Calculate average percentage differences
+    avg_area_diff = sum(area_diffs) / len(area_diffs) if area_diffs else 0
+    avg_perimeter_diff = sum(perimeter_diffs) / len(perimeter_diffs) if perimeter_diffs else 0
+
+    st.write(f'Average difference in area (%): {avg_area_diff:.2f}%')
+    st.write(f'Average difference in perimeter (%): {avg_perimeter_diff:.2f}%')
