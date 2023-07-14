@@ -8,10 +8,10 @@ from shapely.geometry import MultiPolygon
 
 # Setup Streamlit layout
 st.set_page_config(layout="wide")
-st.title('🔍 Compare WKTs')
+st.title('Compare Two WKT Polygons')
 st.markdown("""
     **Instructions:** Paste the Well-Known Text (WKT) for each of the polygons you want to compare in the boxes below.
-    The polygons will be displayed on a map, and you will receive statistics for each, including area, perimeter, and extent.
+    The polygons will be displayed on two maps, one for each polygon and the overlapping area.
 """)
 
 # Create two columns for user input
@@ -19,11 +19,11 @@ col1, col2 = st.columns(2)
 
 # Get WKT from user
 with col1:
-    st.markdown('**🔵 Polygon 1:**')
+    st.markdown('**Polygon 1:**')
     wkt1 = st.text_area('Paste your first WKT here')
 
 with col2:
-    st.markdown('**🔴 Polygon 2:**')
+    st.markdown('**Polygon 2:**')
     wkt2 = st.text_area('Paste your second WKT here')
 
 # Create polygons from WKT and calculate stats
@@ -51,22 +51,40 @@ if wkt1 and wkt2:
     # Get the max extents
     max_bounds = gdf.total_bounds
 
-    # Create folium map centered on the polygons and zoomed on the extents
-    m = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
+    # Create first folium map for the overlayed polygons
+    m1 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
     # Add polygons to the map with different colors and narrower borders
     for idx, poly in enumerate(polys1):
         folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
-                       style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m)
+                       style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1)
 
     for idx, poly in enumerate(polys2):
         folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
-                       style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m)
+                       style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
 
     # Fit map to max extents
-    m.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
+    m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    folium_static(m)
+    folium_static(m1)
+
+    # Create second folium map for the overlapping area
+    m2 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
+
+    # Add overlapping area to the map
+    for idx1, poly1 in enumerate(polys1):
+        for idx2, poly2 in enumerate(polys2):
+            intersection = poly1.intersection(poly2)
+            if intersection.is_empty:
+                st.write(f"No intersection between Polygon 1-{idx1 + 1} and Polygon 2-{idx2 + 1}")
+            else:
+                folium.GeoJson(intersection, name=f"Intersection of Polygon 1-{idx1 + 1} and Polygon 2-{idx2 + 1}",
+                               style_function=lambda x: {'fillColor': 'green', 'color': 'green', 'weight': 1}).add_to(m2)
+
+    # Fit map to max extents
+    m2.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
+
+    folium_static(m2)
 
     # Calculate stats for each polygon
     with col1:
