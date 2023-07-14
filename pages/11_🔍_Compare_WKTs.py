@@ -72,7 +72,7 @@ if wkt1 and wkt2:
         folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
                        style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
 
-    # Calculate total area and perimeter for each WKT
+    # Calculate total area, total and outer perimeter for each WKT
     total_area_1 = sum([poly.area for poly in gdf_utm[:len(polys1)]])
     total_perimeter_1 = sum([poly.length for poly in gdf_utm[:len(polys1)]])
     outer_perimeter_1 = gpd.GeoSeries(polys1).unary_union.boundary.length
@@ -124,7 +124,11 @@ if wkt1 and wkt2:
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
-    area_diff = abs(total_area_1 - total_area_2) / total_area_1 * 100
-    perimeter_diff = abs(total_perimeter_1 - total_perimeter_2) / total_perimeter_1 * 100
+    area_diff = abs(total_area_1 - total_area_2) / max(total_area_1, total_area_2) * 100
     st.write(f'Difference in total area (%): {area_diff:.2f}%')
+    
+    perimeter_diff = abs(total_perimeter_1 - total_perimeter_2) / max(total_perimeter_1, total_perimeter_2) * 100
     st.write(f'Difference in total perimeter (%): {perimeter_diff:.2f}%')
+    
+    outer_perimeter_diff = abs(outer_perimeter_1 - outer_perimeter_2) / max(outer_perimeter_1, outer_perimeter_2) * 100
+    st.write(f'Difference in outer perimeter (%): {outer_perimeter_diff:.2f}%')
