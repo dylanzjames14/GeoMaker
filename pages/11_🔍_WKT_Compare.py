@@ -5,6 +5,7 @@ from shapely import wkt
 from streamlit_folium import folium_static
 from shapely.errors import WKTReadingError
 from shapely.geometry import MultiPolygon
+import pyproj
 
 # Setup Streamlit layout
 st.set_page_config(layout="wide")
@@ -45,8 +46,16 @@ if wkt1 and wkt2:
     else:
         polys2 = [poly2]
 
+    # Determine UTM Zone
+    centroid = polys1[0].centroid  # Use the first polygon to determine UTM zone
+    utm_zone = int((centroid.x + 180) / 6) + 1
+    utm_crs = f"+proj=utm +zone={utm_zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+
     # Create a GeoSeries from the polygons
-    gdf = gpd.GeoSeries(polys1 + polys2)
+    gdf = gpd.GeoSeries(polys1 + polys2).set_crs("EPSG:4326")
+
+    # Project to UTM CRS for accurate measurements
+    gdf_utm = gdf.to_crs(utm_crs)
 
     # Get the max extents
     max_bounds = gdf.total_bounds
@@ -67,8 +76,9 @@ if wkt1 and wkt2:
     with col1:
         st.subheader('🔵 Polygon 1 Stats:')
         for idx, poly in enumerate(polys1):
-            area_m2 = poly.area  # Area in square meters
-            perimeter_m = poly.length  # Perimeter in meters
+            poly_utm = gdf_utm[idx]  # Use the projected polygon for calculations
+            area_m2 = poly_utm.area  # Area in square meters
+            perimeter_m = poly_utm.length  # Perimeter in meters
             st.write(f'Area 1-{idx + 1} (m²): {area_m2:.2f} m²')
             st.write(f'Perimeter 1-{idx + 1} (meters): {perimeter_m:.2f} meters')
             st.write(f'Bounds 1-{idx + 1}: {poly.bounds}')
@@ -76,8 +86,9 @@ if wkt1 and wkt2:
     with col2:
         st.subheader('🔴 Polygon 2 Stats:')
         for idx, poly in enumerate(polys2):
-            area_m2 = poly.area  # Area in square meters
-            perimeter_m = poly.length  # Perimeter in meters
+            poly_utm = gdf_utm[len(polys1) + idx]  # Use the projected polygon for calculations
+            area_m2 = poly_utm.area  # Area in square meters
+            perimeter_m = poly_utm.length  # Perimeter in meters
             st.write(f'Area 2-{idx + 1} (m²): {area_m2:.2f} m²')
             st.write(f'Perimeter 2-{idx + 1} (meters): {perimeter_m:.2f} meters')
             st.write(f'Bounds 2-{idx + 1}: {poly.bounds}')
@@ -114,8 +125,8 @@ if wkt1 and wkt2:
     area_diffs = []
     perimeter_diffs = []
     for idx in range(max(len(polys1), len(polys2))):
-        poly1 = polys1[idx] if idx < len(polys1) else None
-        poly2 = polys2[idx] if idx < len(polys2) else None
+        poly1 = gdf_utm[idx] if idx < len(polys1) else None  # Use the projected polygon for calculations
+        poly2 = gdf_utm[len(polys1) + idx] if idx < len(polys2) else None  # Use the projected polygon for calculations
         if poly1 and poly2:
             area_diff = abs(poly1.area - poly2.area) / poly1.area * 100
             perimeter_diff = abs(poly1.length - poly2.length) / poly1.length * 100
@@ -126,4 +137,3 @@ if wkt1 and wkt2:
             st.write(f'Difference in extent {idx + 1}: {abs(poly1.bounds[2] - poly2.bounds[2])} m in x direction, {abs(poly1.bounds[3] - poly2.bounds[3])} m in y direction')
         else:
             st.write(f"Polygon {idx + 1} does not exist in both groups.")
-
