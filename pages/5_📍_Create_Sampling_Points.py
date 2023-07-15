@@ -15,6 +15,8 @@ from pykml import parser
 import requests
 from lxml import etree
 
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
+
 if 'uploaded_boundary' not in st.session_state:
     st.session_state.uploaded_boundary = None
 
