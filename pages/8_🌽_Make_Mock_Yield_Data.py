@@ -109,8 +109,6 @@ if 'boundary_updated' not in st.session_state:
 if 'new_yield_zip' not in st.session_state:
     st.session_state.new_yield_zip = None
 
-st.set_page_config(layout="wide")
-
 def shapefile_to_geojson(shp_file):
     with tempfile.TemporaryDirectory() as tmpdir:
         with ZipFile(shp_file) as zip_file:
