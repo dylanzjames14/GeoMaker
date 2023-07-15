@@ -13,7 +13,6 @@ import simplekml
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 
-st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 def get_polygon_bounds(features):
     min_lat, min_lon, max_lat, max_lon = None, None, None, None
     for feature in features:
@@ -70,6 +69,7 @@ def save_geojson_to_shapefile(all_drawings, filename):
             return buffer.read()
 
 
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 st.title("✏️ Draw a Field")
 
 # Create an expander for the instructions
