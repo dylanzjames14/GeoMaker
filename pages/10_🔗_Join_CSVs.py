@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import base64
 
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
+
 def app():
     st.title('🔗 CSV Joiner')
 
