@@ -20,6 +20,8 @@ from shapely.ops import cascaded_union
 from collections import OrderedDict
 from dateutil.parser import parse as parse_date
 
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
+
 # Functions 
 def get_uploaded_boundary_gdf(uploaded_boundary):
     if not uploaded_boundary:
