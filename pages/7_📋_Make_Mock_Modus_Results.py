@@ -7,8 +7,7 @@ from lxml import etree
 from io import StringIO, BytesIO
 import os
 
-st.set_page_config(layout="wide")
-st.title("📋 Make Modus Sampling Results")
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")st.title("📋 Make Modus Sampling Results")
 st.write("Configure your sampling results file using the options in the expander menus.")
 
 # Create a list of default maximum depths
