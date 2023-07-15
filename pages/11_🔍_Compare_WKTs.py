@@ -8,7 +8,7 @@ from shapely.geometry import MultiPolygon
 import pyproj
 
 # Setup Streamlit layout
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 st.title('🔎 Compare WKTs')
 st.markdown("""
     **Instructions:** Paste the Well-Known Text (WKT) for each of the polygons you want to compare in the boxes below.
