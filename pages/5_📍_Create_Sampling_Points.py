@@ -21,7 +21,7 @@ if 'uploaded_boundary' not in st.session_state:
 if 'boundary_updated' not in st.session_state:
     st.session_state.boundary_updated = False
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 
 def kml_to_geojson(kml_file):
     with kml_file as f:
@@ -69,7 +69,6 @@ def save_geojson_to_shapefile(all_drawings, filename):
             buffer.seek(0)
             return buffer.read()
 
-st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 st.title("📍 Create Sampling Points")
 
 # Create an expander for the instructions
