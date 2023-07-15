@@ -13,8 +13,7 @@ import simplekml
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 
-st.set_page_config(layout="wide")
-
+st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 def get_polygon_bounds(features):
     min_lat, min_lon, max_lat, max_lon = None, None, None, None
     for feature in features:
