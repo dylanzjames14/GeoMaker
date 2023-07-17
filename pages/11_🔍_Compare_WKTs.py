@@ -115,9 +115,6 @@ if wkt1 and wkt2:
     # Fit map to max extents
     m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    st.markdown('**🔵🔴 Overlay of Polygon 1 and 2:**')
-    folium_static(m1)
-
     # Create folium map for the overlapping area
     m2 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
@@ -134,8 +131,14 @@ if wkt1 and wkt2:
     # Fit map to max extents
     m2.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    st.markdown('**🟢 Overlapping Area of Polygon 1 and 2:**')
-    folium_static(m2)
+    # Display overlay and overlapping maps side by side
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('**🔵🔴 Overlay of Polygon 1 and 2:**')
+        folium_static(m1)
+    with col2:
+        st.markdown('**🟢 Overlapping Area of Polygon 1 and 2:**')
+        folium_static(m2)
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
