@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
+import io
 
 # Function to calculate stats
 def calculate_stats(row, column1, column2):
@@ -36,3 +37,14 @@ if uploaded_file is not None:
             if st.button('Process Data'):
                 result = load_and_process_data(input_df, column1, column2)
                 st.write(result)
+                
+                # Convert DataFrame to CSV string
+                csv = result.to_csv(index=False)
+                
+                # Create download link for CSV string
+                st.download_button(
+                    label="Download result data",
+                    data=csv,
+                    file_name="result.csv",
+                    mime="text/csv"
+                )
