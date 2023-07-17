@@ -13,8 +13,7 @@ def calculate_stats(row):
     return pd.Series([area_diff, perimeter_diff, percent_within, outside_area.wkt])
 
 # Create a function to load and process the data
-def load_and_process_data(file):
-    df = pd.read_csv(file)
+def load_and_process_data(df, column1, column2):
     df[column1] = df[column1].apply(wkt.loads)
     df[column2] = df[column2].apply(wkt.loads)
     gdf = gpd.GeoDataFrame(df, geometry=column1)
@@ -35,5 +34,5 @@ if uploaded_file is not None:
         else:
             column1, column2 = st.multiselect('Select two columns that contain WKTs', input_df.columns, default=input_df.columns[:2].tolist())
             if st.button('Process Data'):
-                result = load_and_process_data(uploaded_file)
+                result = load_and_process_data(input_df, column1, column2)
                 st.write(result)
