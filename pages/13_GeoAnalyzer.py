@@ -4,12 +4,12 @@ import geopandas as gpd
 from shapely import wkt
 
 # Function to calculate stats
-def calculate_stats(row):
-    area_diff = row['geometry1'].area - row['geometry2'].area
-    perimeter_diff = row['geometry1'].length - row['geometry2'].length
-    intersection = row['geometry1'].intersection(row['geometry2'])
-    percent_within = intersection.area / row['geometry1'].area * 100
-    outside_area = row['geometry1'].difference(row['geometry2'])
+def calculate_stats(row, column1, column2):
+    area_diff = row[column1].area - row[column2].area
+    perimeter_diff = row[column1].length - row[column2].length
+    intersection = row[column1].intersection(row[column2])
+    percent_within = intersection.area / row[column1].area * 100
+    outside_area = row[column1].difference(row[column2])
     return pd.Series([area_diff, perimeter_diff, percent_within, outside_area.wkt])
 
 # Create a function to load and process the data
@@ -17,7 +17,7 @@ def load_and_process_data(df, column1, column2):
     df[column1] = df[column1].apply(wkt.loads)
     df[column2] = df[column2].apply(wkt.loads)
     gdf = gpd.GeoDataFrame(df, geometry=column1)
-    gdf[['Area Difference', 'Perimeter Difference', '% Within', 'Outside Area WKT']] = gdf.apply(calculate_stats, axis=1)
+    gdf[['Area Difference', 'Perimeter Difference', '% Within', 'Outside Area WKT']] = gdf.apply(calculate_stats, axis=1, args=(column1, column2))
     return gdf
 
 # Streamlit code to create the app
