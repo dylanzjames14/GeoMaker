@@ -82,11 +82,11 @@ if uploaded_file is not None:
             # Add polygons to their respective maps
             for idx, poly in enumerate(polys1):
                 folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
-                               style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1_poly1)
+                               style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1_poly1)
 
             for idx, poly in enumerate(polys2):
                 folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
-                               style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1_poly2)
+                               style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1_poly2)
 
             # Calculate total area, total and outer perimeter for each WKT
             total_area_1 = sum([poly.area for poly in gdf_utm[:len(polys1)]])
@@ -119,11 +119,11 @@ if uploaded_file is not None:
             # Add polygons to the map with different colors and narrower borders
             for idx, poly in enumerate(polys1):
                 folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
-                               style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1)
-
+                               style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
+            
             for idx, poly in enumerate(polys2):
                 folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
-                               style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
+                               style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1)
 
             # Fit map to max extents
             m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
