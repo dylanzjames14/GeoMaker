@@ -60,7 +60,47 @@ if wkt1 and wkt2:
     # Get the max extents
     max_bounds = gdf.total_bounds
 
-    # Create first folium map for the overlayed polygons
+    # Create individual folium maps for each polygon
+    m1_poly1 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
+    m1_poly2 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
+
+    # Add polygons to their respective maps
+    for idx, poly in enumerate(polys1):
+        folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
+                       style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1_poly1)
+
+    for idx, poly in enumerate(polys2):
+        folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
+                       style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1_poly2)
+
+    # Calculate total area, total and outer perimeter for each WKT
+    total_area_1 = sum([poly.area for poly in gdf_utm[:len(polys1)]])
+    total_perimeter_1 = sum([poly.length for poly in gdf_utm[:len(polys1)]])
+    outer_perimeter_1 = gpd.GeoSeries(gdf_utm[:len(polys1)]).unary_union.boundary.length
+    total_area_2 = sum([poly.area for poly in gdf_utm[len(polys1):]])
+    total_perimeter_2 = sum([poly.length for poly in gdf_utm[len(polys1):]])
+    outer_perimeter_2 = gpd.GeoSeries(gdf_utm[len(polys1):]).unary_union.boundary.length
+
+    # Display total area, total and outer perimeter for each WKT and their respective map
+    with col1:
+        st.subheader('🔵 Polygon 1 Stats:')
+        st.write(f'Total Area 1 (m²): {total_area_1:.2f} m²')
+        st.write(f'Total Perimeter 1 (meters): {total_perimeter_1:.2f} meters')
+        st.write(f'Outer Perimeter 1 (meters): {outer_perimeter_1:.2f} meters')
+        st.write(f'Bounds 1: {poly1.bounds}')
+        st.markdown('**🔵 Polygon 1 Map:**')
+        folium_static(m1_poly1)
+
+    with col2:
+        st.subheader('🔴 Polygon 2 Stats:')
+        st.write(f'Total Area 2 (m²): {total_area_2:.2f} m²')
+        st.write(f'Total Perimeter 2 (meters): {total_perimeter_2:.2f} meters')
+        st.write(f'Outer Perimeter 2 (meters): {outer_perimeter_2:.2f} meters')
+        st.write(f'Bounds 2: {poly2.bounds}')
+        st.markdown('**🔴 Polygon 2 Map:**')
+        folium_static(m1_poly2)
+
+    # Create folium map for the overlay of polygons
     m1 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
     # Add polygons to the map with different colors and narrower borders
@@ -72,37 +112,13 @@ if wkt1 and wkt2:
         folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
                        style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
 
-    # Calculate total area, total and outer perimeter for each WKT
-    total_area_1 = sum([poly.area for poly in gdf_utm[:len(polys1)]])
-    total_perimeter_1 = sum([poly.length for poly in gdf_utm[:len(polys1)]])
-    outer_perimeter_1 = gpd.GeoSeries(gdf_utm[:len(polys1)]).unary_union.boundary.length
-    total_area_2 = sum([poly.area for poly in gdf_utm[len(polys1):]])
-    total_perimeter_2 = sum([poly.length for poly in gdf_utm[len(polys1):]])
-    outer_perimeter_2 = gpd.GeoSeries(gdf_utm[len(polys1):]).unary_union.boundary.length
-
-    # Display total area, total and outer perimeter for each WKT
-    with col1:
-        st.subheader('🔵 Polygon 1 Stats:')
-        st.write(f'Total Area 1 (m²): {total_area_1:.2f} m²')
-        st.write(f'Total Perimeter 1 (meters): {total_perimeter_1:.2f} meters')
-        st.write(f'Outer Perimeter 1 (meters): {outer_perimeter_1:.2f} meters')
-        st.write(f'Bounds 1: {poly1.bounds}')
-
-    with col2:
-        st.subheader('🔴 Polygon 2 Stats:')
-        st.write(f'Total Area 2 (m²): {total_area_2:.2f} m²')
-        st.write(f'Total Perimeter 2 (meters): {total_perimeter_2:.2f} meters')
-        st.write(f'Outer Perimeter 2 (meters): {outer_perimeter_2:.2f} meters')
-        st.write(f'Bounds 2: {poly2.bounds}')
-
     # Fit map to max extents
     m1.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    with col1:
-        st.markdown('**🔵🔴 Overlay of Polygon 1 and 2:**')
-        folium_static(m1)
+    st.markdown('**🔵🔴 Overlay of Polygon 1 and 2:**')
+    folium_static(m1)
 
-    # Create second folium map for the overlapping area
+    # Create folium map for the overlapping area
     m2 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
     # Add overlapping area to the map
@@ -118,9 +134,8 @@ if wkt1 and wkt2:
     # Fit map to max extents
     m2.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
-    with col1:
-        st.markdown('**🟢 Overlapping Area of Polygon 1 and 2:**')
-        folium_static(m2)
+    st.markdown('**🟢 Overlapping Area of Polygon 1 and 2:**')
+    folium_static(m2)
 
     # Compare polygons' stats
     st.subheader('Comparison of polygons')
