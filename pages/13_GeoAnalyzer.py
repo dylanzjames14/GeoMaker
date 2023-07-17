@@ -25,9 +25,15 @@ def load_and_process_data(file):
 st.title('Geospatial Relationship Analyzer')
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 if uploaded_file is not None:
-    input_df = pd.read_csv(uploaded_file)
-    st.write(input_df)
-    column1, column2 = st.multiselect('Select two columns that contain WKTs', input_df.columns, default=input_df.columns[:2].tolist())
-    if st.button('Process Data'):
-        result = load_and_process_data(uploaded_file)
-        st.write(result)
+    try:
+        input_df = pd.read_csv(uploaded_file)
+    except pd.errors.EmptyDataError:
+        st.error('The uploaded file is empty. Please upload a valid CSV file.')
+    else:
+        if len(input_df.columns) < 2:
+            st.error('The uploaded file must have at least two columns.')
+        else:
+            column1, column2 = st.multiselect('Select two columns that contain WKTs', input_df.columns, default=input_df.columns[:2].tolist())
+            if st.button('Process Data'):
+                result = load_and_process_data(uploaded_file)
+                st.write(result)
