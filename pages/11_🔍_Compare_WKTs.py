@@ -75,10 +75,10 @@ if wkt1 and wkt2:
     # Calculate total area, total and outer perimeter for each WKT
     total_area_1 = sum([poly.area for poly in gdf_utm[:len(polys1)]])
     total_perimeter_1 = sum([poly.length for poly in gdf_utm[:len(polys1)]])
-    outer_perimeter_1 = gpd.GeoSeries(polys1).unary_union.boundary.length
+    outer_perimeter_1 = gpd.GeoSeries(gdf_utm[:len(polys1)]).unary_union.boundary.length
     total_area_2 = sum([poly.area for poly in gdf_utm[len(polys1):]])
     total_perimeter_2 = sum([poly.length for poly in gdf_utm[len(polys1):]])
-    outer_perimeter_2 = gpd.GeoSeries(polys2).unary_union.boundary.length
+    outer_perimeter_2 = gpd.GeoSeries(gdf_utm[len(polys1):]).unary_union.boundary.length
 
     # Display total area, total and outer perimeter for each WKT
     with col1:
