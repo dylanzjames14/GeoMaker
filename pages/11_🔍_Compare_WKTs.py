@@ -14,7 +14,7 @@ st.markdown("""
     **Instructions:** Paste the Well-Known Text (WKT) for each of the polygons you want to compare in the boxes below.
     The polygons will be displayed on two maps, one for each polygon and the overlapping area.
 """)
-with st.beta_expander("Information about the metrics"):
+with st.expander("Information about the metrics"):
     st.write("""
     - **Total Area**: The total area of the polygon, calculated in square meters (m²). This is calculated by summing the areas of all individual polygons if a MultiPolygon is provided.
     
