@@ -5,7 +5,7 @@ import folium
 from shapely import wkt
 from streamlit_folium import folium_static
 from shapely.errors import WKTReadingError
-from shapely.geometry import MultiPolygon
+from shapely.geometry import MultiPolygon, Polygon
 import pyproj
 
 def compare_geometries(df, wkt_column, label_column):
@@ -21,7 +21,10 @@ def compare_geometries(df, wkt_column, label_column):
 
         try:
             poly = wkt.loads(wkt_str)
-            display_geometry_stats(poly, f"Row {i+1}" + (f" ({row_label})" if row_label else ""), prefix=wkt_column)
+            if isinstance(poly, (Polygon, MultiPolygon)):
+                display_geometry_stats(poly, f"Row {i+1}" + (f" ({row_label})" if row_label else ""), prefix=wkt_column)
+            else:
+                st.error(f'Non-Polygon/MultiPolygon geometry in row {i+1} ({row_label}). Please check your inputs.')
         except WKTReadingError:
             st.error(f'Invalid WKT in row {i+1} ({row_label}). Please check your inputs.')
 
@@ -89,6 +92,9 @@ elif wkt_source == 'Input WKT':
         for i, wkt_str in enumerate(wkts):
             try:
                 poly = wkt.loads(wkt_str)
-                display_geometry_stats(poly, f"WKT {i+1}")
+                if isinstance(poly, (Polygon, MultiPolygon)):
+                    display_geometry_stats(poly, f"WKT {i+1}")
+                else:
+                    st.error(f'Non-Polygon/MultiPolygon geometry at position {i+1}. Please check your inputs.')
             except WKTReadingError:
                 st.error(f'Invalid WKT at position {i+1}. Please check your inputs.')
