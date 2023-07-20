@@ -35,14 +35,15 @@ def display_geometry_stats(poly, label, prefix=""):
     total_area = gdf.geometry.area[0]
     total_perimeter = gdf.geometry.length[0]
 
-    outer_perimeter = None
     m = folium.Map(location=[poly.centroid.y, poly.centroid.x], zoom_start=12)  # Start at polygon center
     folium.GeoJson(poly).add_to(m)
 
+    polygons = []
     if isinstance(poly, Polygon):
-        polygons = [poly]
+        polygons.append(poly)
     elif isinstance(poly, MultiPolygon):
-        polygons = list(poly)
+        for geom in poly:
+            polygons.append(geom)
 
     for polygon in polygons:
         exterior_coords = polygon.exterior.coords.xy
@@ -54,15 +55,14 @@ def display_geometry_stats(poly, label, prefix=""):
         exterior_coords_gdf['segment_length'] = exterior_coords_gdf.apply(lambda row: row.geometry.distance(row.shifted), axis=1)
         outer_perimeter = exterior_coords_gdf.segment_length.sum()
 
-    st.subheader(f'Polygon Stats ({label}):')
-    st.write(f'Total Area ({prefix}): {total_area:.2f} m²')
-    st.write(f'Total Perimeter ({prefix}): {total_perimeter:.2f} meters')
-    if outer_perimeter:
-        st.write(f'Outer Perimeter ({prefix}): {outer_perimeter:.2f} meters')
-    st.write(f'Bounds ({prefix}): {poly.bounds}')
-    st.markdown(f'**Polygon Map ({label}):**')
-    folium_static(m)
-
+        st.subheader(f'Polygon Stats ({label}):')
+        st.write(f'Total Area ({prefix}): {total_area:.2f} m²')
+        st.write(f'Total Perimeter ({prefix}): {total_perimeter:.2f} meters')
+        if outer_perimeter:
+            st.write(f'Outer Perimeter ({prefix}): {outer_perimeter:.2f} meters')
+        st.write(f'Bounds ({prefix}): {poly.bounds}')
+        st.markdown(f'**Polygon Map ({label}):**')
+        folium_static(m)
 
     m = folium.Map(location=[poly.centroid.y, poly.centroid.x], zoom_start=2)
     folium.GeoJson(poly).add_to(m)
