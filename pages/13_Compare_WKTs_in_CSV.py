@@ -9,13 +9,10 @@ from shapely.geometry import MultiPolygon, Polygon
 import pyproj
 
 def compare_geometries(df, wkt_column, label_column):
-    # Sliders to select the start row and the number of rows to process
     start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1)
     num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1)
 
-    # Loop through the selected rows
     for i in range(start_row, start_row + num_rows):
-        # Get the WKT string and the row label
         wkt_str = df.loc[i, wkt_column]
         row_label = df.loc[i, label_column] if label_column else None
 
@@ -29,13 +26,17 @@ def compare_geometries(df, wkt_column, label_column):
             st.error(f'Invalid WKT in row {i+1} ({row_label}). Please check your inputs.')
 
 def display_geometry_stats(poly, label, prefix=""):
+    if not isinstance(poly, (Polygon, MultiPolygon)):
+        st.error('The provided geometry is neither a Polygon nor a MultiPolygon.')
+        return
+
     gdf = gpd.GeoDataFrame(geometry=[poly], crs='EPSG:4326')
     gdf = gdf.to_crs('EPSG:3395')
 
     total_area = gdf.geometry.area[0]
     total_perimeter = gdf.geometry.length[0]
 
-    m = folium.Map(location=[poly.centroid.y, poly.centroid.x], zoom_start=12)  # Start at polygon center
+    m = folium.Map(location=[poly.centroid.y, poly.centroid.x], zoom_start=12)
     folium.GeoJson(poly).add_to(m)
 
     polygons = []
@@ -75,7 +76,6 @@ def display_geometry_stats(poly, label, prefix=""):
     st.markdown(f'**Polygon Map ({label}):**')
     folium_static(m)
 
-# Setup Streamlit layout
 st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 st.title('🔎 Compare WKTs')
 st.markdown("""
@@ -87,14 +87,10 @@ st.markdown("""
 wkt_source = st.radio("Choose the WKT source", ['Upload CSV', 'Input WKT'], index=0)
 
 if wkt_source == 'Upload CSV':
-    # File uploader
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
     if uploaded_file is not None:
-        # Load the CSV file
         df = pd.read_csv(uploaded_file)
-
-        # Selectors for the WKT columns and the row label column
         wkt_column = st.multiselect('Select WKT column(s)', df.columns, [])
         label_column = st.selectbox('Select the row label column (optional)', ['', *df.columns])
 
