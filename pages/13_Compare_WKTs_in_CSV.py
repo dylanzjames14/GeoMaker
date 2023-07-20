@@ -8,74 +8,87 @@ from shapely.errors import WKTReadingError
 from shapely.geometry import MultiPolygon
 import pyproj
 
+def compare_geometries(df, wkt_column, label_column):
+    # Sliders to select the start row and the number of rows to process
+    start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1)
+    num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1)
+
+    # Loop through the selected rows
+    for i in range(start_row, start_row + num_rows):
+        # Get the WKT string and the row label
+        wkt_str = df.loc[i, wkt_column]
+        row_label = df.loc[i, label_column] if label_column else None
+
+        try:
+            poly = wkt.loads(wkt_str)
+            display_geometry_stats(poly, f"Row {i+1}" + (f" ({row_label})" if row_label else ""), prefix=wkt_column)
+        except WKTReadingError:
+            st.error(f'Invalid WKT in row {i+1} ({row_label}). Please check your inputs.')
+
+def display_geometry_stats(poly, label, prefix=""):
+    gdf = gpd.GeoDataFrame(geometry=[poly], crs='EPSG:4326')
+    gdf = gdf.to_crs('EPSG:3395')
+
+    total_area = gdf.geometry.area[0]
+    total_perimeter = gdf.geometry.length[0]
+
+    exterior_coords = poly.exterior.coords.xy
+    exterior_coords_df = pd.DataFrame({'lon': exterior_coords[0], 'lat': exterior_coords[1]})
+    exterior_coords_gdf = gpd.GeoDataFrame(exterior_coords_df, geometry=gpd.points_from_xy(exterior_coords_df.lon, exterior_coords_df.lat), crs='EPSG:4326')
+    exterior_coords_gdf = exterior_coords_gdf.to_crs('EPSG:3395')
+    exterior_coords_gdf['shifted'] = exterior_coords_gdf.geometry.shift(-1)
+    exterior_coords_gdf = exterior_coords_gdf[:-1]
+    exterior_coords_gdf['segment_length'] = exterior_coords_gdf.apply(lambda row: row.geometry.distance(row.shifted), axis=1)
+    outer_perimeter = exterior_coords_gdf.segment_length.sum()
+
+    m = folium.Map(location=[poly.centroid.y, poly.centroid.x], zoom_start=2)
+    folium.GeoJson(poly).add_to(m)
+
+    st.subheader(f'Polygon Stats ({label}):')
+    st.write(f'Total Area ({prefix}): {total_area:.2f} m²')
+    st.write(f'Total Perimeter ({prefix}): {total_perimeter:.2f} meters')
+    st.write(f'Outer Perimeter ({prefix}): {outer_perimeter:.2f} meters')
+    st.write(f'Bounds ({prefix}): {poly.bounds}')
+    st.markdown(f'**Polygon Map ({label}):**')
+    folium_static(m)
+
 # Setup Streamlit layout
 st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 st.title('🔎 Compare WKTs')
 st.markdown("""
-    **Instructions:** Upload a CSV file and select the columns that contain the Well-Known Text (WKT) for the polygons you want to compare.
-    Alternatively, you can also input a WKT directly.
-    The polygons and their overlapping areas will be displayed on maps, along with their stats and the corresponding file id for each row.
+    **Instructions:** Either upload a CSV file and select one or two columns that contain the Well-Known Text (WKT) for the polygons you want to compare,
+    or alternatively enter a WKT string directly. If you upload a CSV, you can also select the row label column (optional) and the number of rows to process 
+    (up to a maximum of 50). The polygons and their overlapping areas will be displayed on maps, along with their stats.
 """)
 
-# File uploader and direct WKT input
-input_option = st.selectbox('Choose an input method', ['Upload CSV', 'Input WKT'])
+wkt_source = st.radio("Choose the WKT source", ['Upload CSV', 'Input WKT'], index=0)
 
-if input_option == 'Upload CSV':
+if wkt_source == 'Upload CSV':
+    # File uploader
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
     if uploaded_file is not None:
         # Load the CSV file
         df = pd.read_csv(uploaded_file)
 
-        # Selectors for the WKT columns and the file id column
-        column_selection = st.multiselect('Select the WKT column(s)', df.columns)
+        # Selectors for the WKT columns and the row label column
+        wkt_column = st.multiselect('Select WKT column(s)', df.columns, [])
+        label_column = st.selectbox('Select the row label column (optional)', ['', *df.columns])
 
-        if len(column_selection) > 0:
-            id_column = st.selectbox('Select the file id column', df.columns)
+        if len(wkt_column) == 0:
+            st.warning('Please select at least one WKT column to proceed.')
+        else:
+            for wkt_col in wkt_column:
+                compare_geometries(df, wkt_col, label_column)
 
-            # Sliders to select the start row and the number of rows to process
-            start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1)
-            num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1)
+elif wkt_source == 'Input WKT':
+    wkt_inputs = st.text_area("Enter one or more WKT strings, separated by a line:", value="", height=150, max_chars=None, key=None)
+    wkts = wkt_inputs.split("\n")
 
-            # Loop through the selected rows
-            for i in range(start_row, start_row + num_rows):
-                # Get the WKT strings and the file id
-                wkts = [df.loc[i, col] for col in column_selection]
-                file_id = df.loc[i, id_column]
-
-                st.subheader(f'File id: {file_id}')
-
-                # Function to create and process polygons
-                process_polygons(wkts, column_selection)
-
-elif input_option == 'Input WKT':
-    wkts = [st.text_input('Enter a WKT string')]
-
-    # Button to add another WKT
-    if st.button('Add another WKT'):
-        wkts.append(st.text_input('Enter another WKT string'))
-
-    # Function to create and process polygons
-    process_polygons(wkts)
-
-def process_polygons(wkts, column_names=None):
-    polygons = []
-    for i, wkt_string in enumerate(wkts):
-        if wkt_string:
+    if wkt_inputs:
+        for i, wkt_str in enumerate(wkts):
             try:
-                polygon = wkt.loads(wkt_string)
-                polygons.append(polygon)
-
-                # Function to calculate and display stats
-                display_stats(polygon, i, column_names)
-
+                poly = wkt.loads(wkt_str)
+                display_geometry_stats(poly, f"WKT {i+1}")
             except WKTReadingError:
-                st.error('Invalid WKT. Please check your inputs.')
-                st.stop()
-
-    # Function to display maps
-    display_maps(polygons)
-
-    if len(polygons) > 1:
-        # Function to compare polygons' stats
-        compare_stats(polygons)
+                st.error(f'Invalid WKT at position {i+1}. Please check your inputs.')
