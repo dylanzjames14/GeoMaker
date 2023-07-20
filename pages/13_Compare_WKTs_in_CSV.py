@@ -35,14 +35,31 @@ def display_geometry_stats(poly, label, prefix=""):
     total_area = gdf.geometry.area[0]
     total_perimeter = gdf.geometry.length[0]
 
-    exterior_coords = poly.exterior.coords.xy
-    exterior_coords_df = pd.DataFrame({'lon': exterior_coords[0], 'lat': exterior_coords[1]})
-    exterior_coords_gdf = gpd.GeoDataFrame(exterior_coords_df, geometry=gpd.points_from_xy(exterior_coords_df.lon, exterior_coords_df.lat), crs='EPSG:4326')
-    exterior_coords_gdf = exterior_coords_gdf.to_crs('EPSG:3395')
-    exterior_coords_gdf['shifted'] = exterior_coords_gdf.geometry.shift(-1)
-    exterior_coords_gdf = exterior_coords_gdf[:-1]
-    exterior_coords_gdf['segment_length'] = exterior_coords_gdf.apply(lambda row: row.geometry.distance(row.shifted), axis=1)
-    outer_perimeter = exterior_coords_gdf.segment_length.sum()
+    if isinstance(poly, (Polygon, MultiPolygon)):
+        exterior_coords = poly.exterior.coords.xy
+        exterior_coords_df = pd.DataFrame({'lon': exterior_coords[0], 'lat': exterior_coords[1]})
+        exterior_coords_gdf = gpd.GeoDataFrame(exterior_coords_df, geometry=gpd.points_from_xy(exterior_coords_df.lon, exterior_coords_df.lat), crs='EPSG:4326')
+        exterior_coords_gdf = exterior_coords_gdf.to_crs('EPSG:3395')
+        exterior_coords_gdf['shifted'] = exterior_coords_gdf.geometry.shift(-1)
+        exterior_coords_gdf = exterior_coords_gdf[:-1]
+        exterior_coords_gdf['segment_length'] = exterior_coords_gdf.apply(lambda row: row.geometry.distance(row.shifted), axis=1)
+        outer_perimeter = exterior_coords_gdf.segment_length.sum()
+    else:
+        outer_perimeter = None
+
+    # Use bounds of polygon to set map view
+    bounds = poly.bounds
+    m = folium.Map(location=[(bounds[1] + bounds[3]) / 2, (bounds[0] + bounds[2]) / 2], zoom_start=2)
+    folium.GeoJson(poly).add_to(m)
+
+    st.subheader(f'Polygon Stats ({label}):')
+    st.write(f'Total Area ({prefix}): {total_area:.2f} m²')
+    st.write(f'Total Perimeter ({prefix}): {total_perimeter:.2f} meters')
+    if outer_perimeter:
+        st.write(f'Outer Perimeter ({prefix}): {outer_perimeter:.2f} meters')
+    st.write(f'Bounds ({prefix}): {poly.bounds}')
+    st.markdown(f'**Polygon Map ({label}):**')
+    folium_static(m)
 
     m = folium.Map(location=[poly.centroid.y, poly.centroid.x], zoom_start=2)
     folium.GeoJson(poly).add_to(m)
