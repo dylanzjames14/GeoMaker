@@ -35,6 +35,7 @@ def display_geometry_stats(poly, label, prefix=""):
     total_area = gdf.geometry.area[0]
     total_perimeter = gdf.geometry.length[0]
 
+    outer_perimeter = None
     if isinstance(poly, (Polygon, MultiPolygon)):
         exterior_coords = poly.exterior.coords.xy
         exterior_coords_df = pd.DataFrame({'lon': exterior_coords[0], 'lat': exterior_coords[1]})
@@ -44,8 +45,6 @@ def display_geometry_stats(poly, label, prefix=""):
         exterior_coords_gdf = exterior_coords_gdf[:-1]
         exterior_coords_gdf['segment_length'] = exterior_coords_gdf.apply(lambda row: row.geometry.distance(row.shifted), axis=1)
         outer_perimeter = exterior_coords_gdf.segment_length.sum()
-    else:
-        outer_perimeter = None
 
     # Use bounds of polygon to set map view
     bounds = poly.bounds
