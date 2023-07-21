@@ -40,7 +40,7 @@ if uploaded_file is not None:
         wkt2 = df.loc[i, wkt_column2]
         file_id = df.loc[i, id_column]
 
-        st.subheader(f'File id: {file_id}')
+        st.subheader(f'Row identifier: {file_id}')
 
         # Create polygons from WKT and calculate stats
         if wkt1 and wkt2:
@@ -81,11 +81,11 @@ if uploaded_file is not None:
 
             # Add polygons to their respective maps
             for idx, poly in enumerate(polys1):
-                folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
+                folium.GeoJson(poly, name=f"{wkt_column1}-{idx + 1}",
                                style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1_poly1)
 
             for idx, poly in enumerate(polys2):
-                folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
+                folium.GeoJson(poly, name=f"{wkt_column2}-{idx + 1}",
                                style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1_poly2)
 
             # Calculate total area, total and outer perimeter for each WKT
@@ -96,33 +96,40 @@ if uploaded_file is not None:
             total_perimeter_2 = sum([poly.length for poly in gdf_utm[len(polys1):]])
             outer_perimeter_2 = gpd.GeoSeries(gdf_utm[len(polys1):]).unary_union.boundary.length
 
+            # Calculate the percentage of each polygon that is contained outside of the other
+            poly1_outside_poly2 = poly1.difference(poly2).area / poly1.area * 100
+            poly2_outside_poly1 = poly2.difference(poly1).area / poly2.area * 100
+
             # Display total area, total and outer perimeter for each WKT and their respective map
-            st.subheader('🔵 Polygon 1 Stats:')
+            st.subheader(f'🔵 {wkt_column1} Stats:')
             st.write(f'Total Area 1 (m²): {total_area_1:.2f} m²')
             st.write(f'Total Perimeter 1 (meters): {total_perimeter_1:.2f} meters')
             st.write(f'Outer Perimeter 1 (meters): {outer_perimeter_1:.2f} meters')
             st.write(f'Bounds 1: {poly1.bounds}')
-            st.markdown('**🔵 Polygon 1 Map:**')
+            st.markdown(f'**🔵 {wkt_column1} Map:**')
             folium_static(m1_poly1)
 
-            st.subheader('🔴 Polygon 2 Stats:')
+            st.subheader(f'🔴 {wkt_column2} Stats:')
             st.write(f'Total Area 2 (m²): {total_area_2:.2f} m²')
             st.write(f'Total Perimeter 2 (meters): {total_perimeter_2:.2f} meters')
             st.write(f'Outer Perimeter 2 (meters): {outer_perimeter_2:.2f} meters')
             st.write(f'Bounds 2: {poly2.bounds}')
-            st.markdown('**🔴 Polygon 2 Map:**')
+            st.markdown(f'**🔴 {wkt_column2} Map:**')
             folium_static(m1_poly2)
+
+            st.write(f'Percentage of {wkt_column1} outside {wkt_column2} (%): {poly1_outside_poly2:.2f}%')
+            st.write(f'Percentage of {wkt_column2} outside {wkt_column1} (%): {poly2_outside_poly1:.2f}%')
 
             # Create folium map for the overlay of polygons
             m1 = folium.Map(location=[gdf.centroid.y.mean(), gdf.centroid.x.mean()], zoom_start=15, control_scale=True)
 
             # Add polygons to the map with different colors and narrower borders
             for idx, poly in enumerate(polys1):
-                folium.GeoJson(poly, name=f"Polygon 1-{idx + 1}",
+                folium.GeoJson(poly, name=f"{wkt_column1}-{idx + 1}",
                                style_function=lambda x: {'fillColor': 'blue', 'color': 'blue', 'weight': 1}).add_to(m1)
             
             for idx, poly in enumerate(polys2):
-                folium.GeoJson(poly, name=f"Polygon 2-{idx + 1}",
+                folium.GeoJson(poly, name=f"{wkt_column2}-{idx + 1}",
                                style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'weight': 1}).add_to(m1)
 
             # Fit map to max extents
@@ -136,18 +143,18 @@ if uploaded_file is not None:
                 for idx2, poly2 in enumerate(polys2):
                     intersection = poly1.intersection(poly2)
                     if intersection.is_empty:
-                        st.write(f"No intersection between Polygon 1-{idx1 + 1} and Polygon 2-{idx2 + 1}")
+                        st.write(f"No intersection between {wkt_column1}-{idx1 + 1} and {wkt_column2}-{idx2 + 1}")
                     else:
-                        folium.GeoJson(intersection, name=f"Intersection of Polygon 1-{idx1 + 1} and Polygon 2-{idx2 + 1}",
+                        folium.GeoJson(intersection, name=f"Intersection of {wkt_column1}-{idx1 + 1} and {wkt_column2}-{idx2 + 1}",
                                        style_function=lambda x: {'fillColor': 'green', 'color': 'green', 'weight': 1}).add_to(m2)
 
             # Fit map to max extents
             m2.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
             # Display overlay and overlapping maps side by side
-            st.markdown('**🔵🔴 Overlay of Polygon 1 and 2:**')
+            st.markdown(f'**🔵🔴 Overlay of {wkt_column1} and {wkt_column2}:**')
             folium_static(m1)
-            st.markdown('**🟢 Overlapping Area of Polygon 1 and 2:**')
+            st.markdown(f'**🟢 Overlapping Area of {wkt_column1} and {wkt_column2}:**')
             folium_static(m2)
 
             # Compare polygons' stats
