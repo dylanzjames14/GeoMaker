@@ -43,7 +43,7 @@ def display_geometry_stats(poly, label, prefix=""):
     if isinstance(poly, Polygon):
         polygons.append(poly)
     elif isinstance(poly, MultiPolygon):
-        for geom in poly:
+        for geom in poly.geoms:
             polygons.append(geom)
 
     for polygon in polygons:
@@ -102,7 +102,7 @@ if wkt_source == 'Upload CSV':
 
 elif wkt_source == 'Input WKT':
     wkt_inputs = st.text_area("Enter one or more WKT strings, separated by a line:", value="", height=150, max_chars=None, key=None)
-    wkts = wkt_inputs.split("\n")
+    wkts = wkt_inputs.split("\\n")
 
     if wkt_inputs:
         for i, wkt_str in enumerate(wkts):
