@@ -43,8 +43,7 @@ def display_geometry_stats(poly, label, prefix=""):
     if isinstance(poly, Polygon):
         polygons.append(poly)
     elif isinstance(poly, MultiPolygon):
-        for geom in poly:
-            polygons.append(geom)
+        polygons = [p for p in poly]
 
     for polygon in polygons:
         exterior_coords = polygon.exterior.coords.xy
