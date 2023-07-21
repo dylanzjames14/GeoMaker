@@ -9,8 +9,8 @@ from shapely.geometry import MultiPolygon, Polygon
 import pyproj
 
 def compare_geometries(df, wkt_column, label_column):
-    start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1, key='start_row_' + str(i))
-    num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1, key='num_rows_' + str(i))
+    start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1, key='start_row_' + str(id(df)))
+    num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1, key='num_rows_' + str(id(df)))
 
     for i in range(start_row, start_row + num_rows):
         wkt_str = df.loc[i, wkt_column]
@@ -43,7 +43,7 @@ def display_geometry_stats(poly, label, prefix=""):
     if isinstance(poly, Polygon):
         polygons.append(poly)
     elif isinstance(poly, MultiPolygon):
-        for geom in poly.geoms:
+        for geom in poly:
             polygons.append(geom)
 
     for polygon in polygons:
