@@ -13,7 +13,7 @@ st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 st.title('🔎 Compare WKTs')
 st.markdown("""
     **Instructions:** Upload a CSV file and select the two columns that contain the Well-Known Text (WKT) for the polygons you want to compare.
-    You can also select the starting row and the number of rows to process (up to a maximum of 50).
+    You can also select the starting row and the number of rows to process (up to a maximum of 500).
     The polygons and their overlapping areas will be displayed on maps, along with their stats and the corresponding file id for each row.
 """)
 
@@ -31,7 +31,7 @@ if uploaded_file is not None:
 
     # Sliders to select the start row and the number of rows to process
     start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1)
-    num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1)
+    num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(500, len(df)-start_row), value=5, step=1)
 
     # Loop through the selected rows
     for i in range(start_row, start_row + num_rows):
