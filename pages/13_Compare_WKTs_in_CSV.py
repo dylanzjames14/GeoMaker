@@ -9,8 +9,8 @@ from shapely.geometry import MultiPolygon, Polygon
 import pyproj
 
 def compare_geometries(df, wkt_column, label_column):
-    start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1)
-    num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1)
+    start_row = st.slider('Select the start row', min_value=0, max_value=len(df)-1, value=0, step=1, key='start_row_' + str(i))
+    num_rows = st.slider('Select the number of rows to process', min_value=1, max_value=min(50, len(df)-start_row), value=5, step=1, key='num_rows_' + str(i))
 
     for i in range(start_row, start_row + num_rows):
         wkt_str = df.loc[i, wkt_column]
@@ -102,7 +102,7 @@ if wkt_source == 'Upload CSV':
 
 elif wkt_source == 'Input WKT':
     wkt_inputs = st.text_area("Enter one or more WKT strings, separated by a line:", value="", height=150, max_chars=None, key=None)
-    wkts = wkt_inputs.split("\\n")
+    wkts = wkt_inputs.split("\n")
 
     if wkt_inputs:
         for i, wkt_str in enumerate(wkts):
