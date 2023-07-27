@@ -106,16 +106,17 @@ if uploaded_file is not None:
             st.write(f'Total Perimeter 1 (meters): {total_perimeter_1:.2f} meters')
             st.write(f'Outer Perimeter 1 (meters): {outer_perimeter_1:.2f} meters')
             st.write(f'Bounds 1: {poly1.bounds}')
-            st.markdown(f'**🔵 {wkt_column1} Map:**')
-            folium_static(m1_poly1)
-
-            st.subheader(f'🔴 {wkt_column2} Stats:')
+            col1, col2 = st.beta_columns(2)
+            with col1:
+                st.subheader(f'🔵 {wkt_column1} Stats:')
             st.write(f'Total Area 2 (m²): {total_area_2:.2f} m²')
             st.write(f'Total Perimeter 2 (meters): {total_perimeter_2:.2f} meters')
             st.write(f'Outer Perimeter 2 (meters): {outer_perimeter_2:.2f} meters')
             st.write(f'Bounds 2: {poly2.bounds}')
-            st.markdown(f'**🔴 {wkt_column2} Map:**')
-            folium_static(m1_poly2)
+            with col1:
+                st.markdown(f'**🔵 {wkt_column1} Map:**')
+                folium_static(m1_poly1)
+            with col2:
 
             st.write(f'Percentage of {wkt_column1} outside {wkt_column2} (%): {poly1_outside_poly2:.2f}%')
             st.write(f'Percentage of {wkt_column2} outside {wkt_column1} (%): {poly2_outside_poly1:.2f}%')
@@ -152,10 +153,13 @@ if uploaded_file is not None:
             m2.fit_bounds([[max_bounds[1], max_bounds[0]], [max_bounds[3], max_bounds[2]]])
 
             # Display overlay and overlapping maps side by side
-            st.markdown(f'**🔵🔴 Overlay of {wkt_column1} and {wkt_column2}:**')
-            folium_static(m1)
-            st.markdown(f'**🟢 Overlapping Area of {wkt_column1} and {wkt_column2}:**')
-            folium_static(m2)
+            col3, col4 = st.beta_columns(2)
+            with col3:
+                st.markdown(f'**🔵🔴 Overlay of {wkt_column1} and {wkt_column2}:**')
+                folium_static(m1)
+            with col4:
+                st.markdown(f'**🟢 Overlapping Area of {wkt_column1} and {wkt_column2}:**')
+                folium_static(m2)
 
             # Compare polygons' stats
             st.subheader('Comparison of polygons')
