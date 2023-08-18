@@ -309,7 +309,7 @@ with col2:
             field_multipolygon = cascaded_union([shapely_shape(feature['geometry']) for feature in st.session_state.saved_geography if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']])
             field_centroid = field_multipolygon.representative_point()
 
-        reference_centroid = Point(-97.85271468657078, 39.83161673804731)
+        reference_centroid = Point(121.64744396006378, -33.64156620995182)
 
         if st.button("Make Data"):
             if product_name:
