@@ -20,11 +20,6 @@ from shapely.ops import cascaded_union
 from collections import OrderedDict
 from dateutil.parser import parse as parse_date
 
-# Define the crops and defaults
-crops_dict = {"Barley": 2, "Canola": 5, "Corn": 173, "Lentils": 8, "Oats": 11, "Soybeans": 174, "Wheat, Hard Red Winter": 11}
-
-crop_defaults = {"Corn": 750, "Soybeans": 255, "Other": 0}
-
 # Functions 
 def get_uploaded_boundary_gdf(uploaded_boundary):
     if not uploaded_boundary:
@@ -152,7 +147,7 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             return buffer.read()
 
 st.title("🌱 Make Mock As-Planted Data")
-st.warning("This page is currently a work in progress. Currently, limited to Wheat seeding.")
+st.warning("This page is currently a work in progress.")
 
 # Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
