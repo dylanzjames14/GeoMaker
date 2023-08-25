@@ -36,19 +36,18 @@ def get_offset(point1, point2):
 def apply_offset(geometry, offset):
     return translate(geometry, xoff=offset[0], yoff=offset[1], zoff=0.0)
 
-def make_application(planting_shapefile_path, field_polygon, reference_centroid, Product, rate_adjustment, selected_date):
-    if os.path.exists(planting_shapefile_path):
-        gdf = read_shapefile_from_folder(planting_shapefile_path)
+def make_application(application_shapefile_path, field_polygon, reference_centroid, crop_name, variety_name, selected_date):
+    if os.path.exists(application_shapefile_path):
+        gdf = read_shapefile_from_folder(application_shapefile_path)
     else:
         st.error("Data not found in the Data directory.")
         return
 
-    # Update the 'Product' column value
-    gdf['crop'] = product_name
-
-
-    # Apply rate adjustment to 'AppliedRate' column
-    gdf['AppliedRate'] = gdf['AppliedRate'] * rate_adjustment
+    # Update the 'Crop' and 'Variety' column values
+    if 'Crop' in gdf.columns:
+        gdf['Crop'] = crop_name
+    if 'Variety' in gdf.columns:
+        gdf['Variety'] = variety_name
 
     # If a date has been selected, update the 'Time' and 'IsoTime' columns
     if selected_date:
@@ -146,10 +145,8 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             buffer.seek(0)
             return buffer.read()
 
-st.title("🌱 Make Mock As-Planted Data")
-st.warning("This page is currently a work in progress.")
+st.title("🌾 Make Mock As-Planted Data")
 
-# Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
 with instructions_expander:
     st.markdown("""
@@ -157,7 +154,9 @@ with instructions_expander:
 
     1. **Add a field boundary**: If you have already saved a drawn boundary on the **✏️ Draw a Field** page, it will be automatically displayed on the map. You may also upload a zipped boundary using the file uploader below. 
 
-    2. **Generate as-planted data**: Once you have a boundary, click the "Make Data" button to generate the data for your field. The application will create a new shapefile containing the data, which you can download by clicking the "Download Shapefile" button.
+    2. **Specify Crop and Variety**: Enter the names of the crop and variety for the as-planted data.
+
+    3. **Generate as-planted data**: Once you have a boundary, click the "Make Data" button to generate the as-planted data for your field. The application will create a new shapefile containing the as-planted data, which you can download by clicking the "Download Shapefile" button.
 
     💡 **Tip:** If you need to add or modify your field boundary, visit the **✏️ Draw a Field** page and follow the instructions there.
     """, unsafe_allow_html=True)
@@ -266,26 +265,20 @@ with col1:
 
 # Add the 'Make Data' button
 with col2:
-    # Define application dates
+    # Inputs for Crop, Variety, and Date
+    # Define the crops and their corresponding IDs
+    crops_dict = {"Barley": 2, "Canola": 5, "Corn": 173, "Lentils": 8, "Oats": 11, "Soybeans": 174, "Wheat, Hard Red Winter": 11, "Sugarcane": 133}
+
+    # Sort the dictionary alphabetically
+    sorted_crops_dict = OrderedDict(sorted(crops_dict.items()))
+
+    # Get the user's selected crop
+    selected_crop_name = st.selectbox("Select a crop:", list(sorted_crops_dict.keys()))
+    selected_crop_id = sorted_crops_dict[selected_crop_name]  # Get the ID of the selected crop
+
+    variety_name = st.text_input("Enter a variety:", value="")
     selected_date = st.date_input("Application date:", value=None)
-    if selected_date:
-        st.session_state.selected_date = selected_date
-    # Get the user's selected product
-    product_name = st.text_input("Enter a product:", value="")
 
-
-    # Get the default value for the selected crop
-    default_value = (0)
-
-    # Display the slider for rate adjustment
-    rate_adjustment_input = st.slider(
-        "Rate adjustment (%)",
-        min_value=-200,
-        max_value=850,
-        value=default_value,
-        step=1,
-    )
-    rate_adjustment = (rate_adjustment_input + 100) / 100
     
     #You have no boundary warn
     if ('uploaded_boundary' not in st.session_state or st.session_state.uploaded_boundary is None) and \
@@ -304,20 +297,21 @@ with col2:
             field_multipolygon = cascaded_union([shapely_shape(feature['geometry']) for feature in st.session_state.saved_geography if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']])
             field_centroid = field_multipolygon.representative_point()
 
-        reference_centroid = Point(121.64744396006378, -33.64156620995182)
+        reference_centroid = Point(-33.64975334195256, 121.6542291393672)
 
         if st.button("Make Data"):
-            if product_name:
+            if selected_crop_name and variety_name:  # Changed `crop_name` to `selected_crop_name`
                 with st.spinner("Creating your application file. Please be patient, this will take a couple minutes."):
-                    planting_shapefile_path = "Data/Seed"
+                    application_shapefile_path = "Data/Seed"
                     # call make_application function with all the arguments
-                    new_application_zip = make_application(planting_shapefile_path, field_multipolygon, reference_centroid, product_name, rate_adjustment, st.session_state.selected_date)
+                    new_application_zip = make_application(application_shapefile_path, field_multipolygon, reference_centroid, selected_crop_name, variety_name, st.session_state.selected_date)  # Changed `crop_name` to `selected_crop_name`
 
                 if new_application_zip:
                     st.download_button("Download Shapefile", new_application_zip, "Application_Shapefile.zip")
                     st.success("Congratulations, your new application file has been made successfully!")
             else:
                 st.warning("Please input your product before proceeding.")
+
 
     if st.session_state.new_application_zip:
         st.download_button("Download Shapefile", st.session_state.new_application_zip, "Application_Shapefile.zip")
