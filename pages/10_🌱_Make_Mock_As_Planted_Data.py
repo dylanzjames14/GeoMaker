@@ -297,7 +297,7 @@ with col2:
             field_multipolygon = cascaded_union([shapely_shape(feature['geometry']) for feature in st.session_state.saved_geography if feature['geometry']['type'] in ['Polygon', 'MultiPolygon']])
             field_centroid = field_multipolygon.representative_point()
 
-        reference_centroid = Point(-33.64975334195256, 121.6542291393672)
+        reference_centroid = Point(41.66782027041434, -93.15253557282972)
 
         if st.button("Make Data"):
             if selected_crop_name and variety_name:  # Changed `crop_name` to `selected_crop_name`
