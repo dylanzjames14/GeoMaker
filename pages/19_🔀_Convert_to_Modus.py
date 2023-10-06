@@ -8,7 +8,7 @@ st.set_page_config(
 
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
-Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks!
+Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
 """)
 
 soil_test_analysis = [
@@ -405,12 +405,12 @@ def main():
         # Display dropdown for Sample ID
         sample_id_col = st.selectbox("Choose the 'Sample ID' column:", options=[''] + list(data.columns), key="sample_id_selectbox")
         
+        # Display the data before starting the matching process
+        st.write(data)
+
         # Reset selections button
         if st.button("Reset Selections"):
             st.experimental_rerun()
-
-        # Display the data before starting the matching process
-        st.write(data)
 
         # Create a container for the scrollable section
         container = st.container()
