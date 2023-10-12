@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="🔀 Modus Soil Test Converter 🔀",
     layout="wide"
 )
-
+st.warning("⚠️ This application is a work in progress. Currently, you cannot output files.")
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
 Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
