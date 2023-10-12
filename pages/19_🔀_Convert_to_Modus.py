@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 st.set_page_config(
     page_title="🔀 Modus Soil Test Converter 🔀",
@@ -11,7 +13,188 @@ st.write("""
 Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
 """)
 
-soil_test_analysis = {
+soil_test_analysis = [
+    "ACE nitrogen (soil protein index)",
+    "acidity",
+    "adjusted sodium adsorption ratio",
+    "aggregate stability",
+    "aluminum",
+    "amino nitrogen",
+    "ammonium",
+    "ammonium-nitrogen",
+    "antimony",
+    "arsenic",
+    "arylsulfatase",
+    "available water holding capacity",
+    "barium",
+    "base saturation",
+    "base saturation - Ca",
+    "base saturation - H",
+    "base saturation - K",
+    "base saturation - Mg",
+    "base saturation - Na",
+    "base saturation - Ca:Mg",
+    "base saturation - Mg:K",
+    "base saturation - K:Mg",
+    "base saturation - Ca+Mg",
+    "beta-glucosidase",
+    "bicarbonate",
+    "boron",
+    "buffer pH",
+    "bulk density",
+    "C:N ratio",
+    "Ca + exchangable Mg",
+    "Ca:K ratio",
+    "Ca:Mg ratio",
+    "Ca:NO3 ratio",
+    "Ca+Mg:K ratio",
+    "cadmium",
+    "calcium",
+    "calcium carbonate",
+    "carbon",
+    "carbon, total",
+    "carbonate",
+    "carbonates, qualitative",
+    "cation exchange capacity",
+    "cation ratio of structural stability",
+    "cation:anion ratio",
+    "chloride",
+    "chromium",
+    "clay",
+    "CO2 respiration",
+    "cobalt",
+    "color",
+    "copper",
+    "copper index",
+    "deleterious material",
+    "dispersion index",
+    "dissolved organic nitrogen (DON)",
+    "electrical conductivity",
+    "electrochemical stability index",
+    "emerson class",
+    "estimated nitrogen release",
+    "exchangeable acidity",
+    "exchangeable aluminum",
+    "exchangeable calcium percentage",
+    "exchangeable hydrogen",
+    "exchangeable hydrogen percentage",
+    "exchangeable magnesium percentage",
+    "exchangeable potassium percentage",
+    "exchangeable sodium percentage",
+    "fluoride",
+    "genomics",
+    "grass tetany risk index",
+    "gravel",
+    "gypsum recommendation",
+    "H+EALP",
+    "humic matter",
+    "hydrogen+aluminum",
+    "hydroxide",
+    "iron",
+    "K:B ratio",
+    "K:Mg ratio",
+    "K:Na ratio",
+    "lead",
+    "lime index",
+    "lime recommendation",
+    "lithium",
+    "magnesium",
+    "magnesium index",
+    "manganese",
+    "manganese index",
+    "mercury",
+    "Mg:K ratio",
+    "Mn:Cu ratio",
+    "Mn:Zn ratio",
+    "moisture content",
+    "molybdenum",
+    "N-acetyl-β-D-glucosaminidase (NAG)",
+    "nickel",
+    "nitrate",
+    "nitrate-nitrogen",
+    "nitrite-nitrogen",
+    "nitrogen mineralization rate",
+    "nitrogen, total",
+    "nitrogen, total inorganic",
+    "organic carbon",
+    "organic carbon, total",
+    "organic matter",
+    "organic nitrogen",
+    "other",
+    "P:Cu ratio",
+    "P:Mn ratio",
+    "P:S ratio",
+    "P:Zn ratio",
+    "particle density",
+    "particulate organic matter 53-2000 um",
+    "permanganate-oxidizable carbon (POXC)",
+    "pH",
+    "phosphate",
+    "phospholipid fatty acid (PLFA)",
+    "phosphomonoesterase",
+    "phosphorus",
+    "phosphorus buffer index",
+    "phosphorus environmental risk index",
+    "phosphorus fixation factor",
+    "phosphorus index",
+    "phosphorus ratio",
+    "phosphorus retention index",
+    "phosphorus saturation index",
+    "phosphorus, total",
+    "potassium",
+    "potassium",
+    "potassium fixation factor",
+    "potassium index",
+    "potassium, total",
+    "potential mineralizable nitrogen",
+    "potential oxidizable carbon",
+    "potentially mineralizable nitrogen (PMN)",
+    "reflectance",
+    "rootzone moisture",
+    "sand",
+    "sand - coarse",
+    "sand - fine",
+    "sand - medium",
+    "sand - very coarse",
+    "sand - very fine",
+    "saturated hydraulic conductivity",
+    "saturation paste %",
+    "selenium",
+    "short-term carbon mineralization",
+    "silicon",
+    "silt",
+    "silt+clay",
+    "silver",
+    "slaking",
+    "sodium",
+    "sodium adsorption ratio",
+    "solids, total",
+    "soluble salts",
+    "soluble salts index",
+    "strontium",
+    "sulfate-sulfur",
+    "sulfur",
+    "sulfur index",
+    "textural classification",
+    "tin",
+    "titratable acidity",
+    "total carbon:total nitrogen",
+    "total organic carbon: total nitrogen",
+    "unknown",
+    "urea",
+    "water extractable nitrogen (WEN)",
+    "water extractable organic carbon (WEOC)",
+    "water extractable organic nitrogen (TDN)",
+    "water extractable organic nitrogen (WEON)",
+    "water soluble C:N ratio",
+    "water soluble carbon",
+    "water-soluble organic carbon (WSOC)",
+    "zinc",
+    "zinc index",
+    "Zn:Cu ratio"
+]
+
+soil_test_analysis_ref = {
 'ACE nitrogen (soil protein index)': [''],
 'C:N ratio': ['S-C:N.16'],
 'CO2 respiration': ['S-CO2-RESP.01'],
@@ -372,14 +555,44 @@ default_units = {
     "zinc index": ['None'],
     "Zn:Cu ratio": ['ppm', 'none'],}
 
-def main():
+def prettify(elem):
+    """Return a pretty-printed XML string for the Element."""
+    rough_string = ET.tostring(elem, 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    return reparsed.toprettyxml(indent="  ")
+
+def generate_xml(row, sample_id_col):
+    root = ET.Element("EventSamples")
+    soil = ET.SubElement(root, "Soil")
     
+    depthrefs = ET.SubElement(soil, "DepthRefs")
+    depthref = ET.SubElement(depthrefs, "DepthRef", DepthID="1")
+    ET.SubElement(depthref, "Name").text = "0 - 6"
+    ET.SubElement(depthref, "StartingDepth").text = "0"
+    ET.SubElement(depthref, "EndingDepth").text = "6"
+    ET.SubElement(depthref, "ColumnDepth").text = "6"
+    ET.SubElement(depthref, "DepthUnit").text = "in"
+    
+    soilsample = ET.SubElement(soil, "SoilSample")
+    samplemetadata = ET.SubElement(soilsample, "SampleMetaData")
+    ET.SubElement(samplemetadata, "SampleNumber").text = str(row[sample_id_col])
+    
+    depths = ET.SubElement(soilsample, "Depths")
+    depth = ET.SubElement(depths, "Depth", DepthID="1")
+    
+    for col, value in row.items():
+        if col != sample_id_col:
+            nutrientresult = ET.SubElement(depth, "NutrientResult")
+            ET.SubElement(nutrientresult, "Element").text = str(col)  # Explicitly cast column name to string
+            ET.SubElement(nutrientresult, "Value").text = str(value)  # Explicitly cast value to string
+            # Add other tags as needed (e.g., ModusTestID, ValueType, etc.)
+    
+    return prettify(root)
+
+def main():
     # Upload the file
     file = st.file_uploader("Choose a CSV, TXT, DBF or other delimited file", type=['csv', 'txt', 'dbf'])
-    
-    # Initialize sample_id_col here
     sample_id_col = ''  
-    
     matched_columns = {}
     unit_columns = {}
 
@@ -387,52 +600,41 @@ def main():
     if file:
         # Use an expander for file configurations
         with st.expander("File Configuration", expanded=True):
-            # Choose delimiter
             delimiter = st.selectbox("Choose the delimiter:", [",", ";", "\t", "|", "Other"])
             if delimiter == "Other":
                 delimiter = st.text_input("Specify the delimiter:", value=",")
             
-            # Check for headers (unselected by default)
             header = st.checkbox("Does the file have a header?", value=False)
         
-        # Load the data
         if header:
             data = pd.read_csv(file, delimiter=delimiter)
         else:
             data = pd.read_csv(file, delimiter=delimiter, header=None)
 
-        # Display dropdown for Sample ID
-        sample_id_col = st.selectbox("Choose the 'Sample ID' column:", options=[''] + list(data.columns), key="sample_id_selectbox")
+        sample_id_col = st.selectbox("Choose the 'Sample ID' column:", options=[''] + list(data.columns), key="sample_id_selectbox", index=0)
         
-        # Display the data before starting the matching process
         st.write(data)
 
-        # Reset selections button
         if st.button("Reset Selections"):
             st.experimental_rerun()
 
-        # Create a container for the scrollable section
         container = st.container()
         
-        for col_name in sorted(data.columns):  # Sort by column names
+        for col_name in data.columns:
             if col_name != sample_id_col:
                 with container:
-                    cols = st.columns(3)  # Three columns: column name, analysis dropdown, units dropdown
+                    cols = st.columns(3)
                     cols[0].write(col_name)
                     selected_analysis = cols[1].selectbox("Analysis", options=['Select Analysis Type'] + soil_test_analysis, key=f"analysis_{col_name}")
                     if selected_analysis != 'Select Analysis Type':
                         matched_columns[col_name] = selected_analysis
-
-                        # Display units dropdown if there are units available for the selected analysis
                         if selected_analysis in default_units and default_units[selected_analysis]:
                             selected_unit = cols[2].selectbox("Unit", options=['Select Unit'] + default_units[selected_analysis], key=f"unit_{col_name}")
                             if selected_unit != 'Select Unit':
                                 unit_columns[col_name] = selected_unit
 
-        # Convert the entire dataframe to strings to ensure consistent data types
         data = data.astype(str)
 
-        # Update the dataframe with matched analysis and units
         unit_row = [unit_columns.get(col, '') for col in data.columns]
         data.loc[-1] = unit_row
         data.index = data.index + 1
@@ -443,8 +645,12 @@ def main():
 
         data = data.sort_index()
 
-        # Redisplay the data with the matched analysis and units
         st.write(data)
+
+        if matched_columns:
+            st.subheader("XML Output")
+            xml_output = generate_xml(data.iloc[0], sample_id_col)
+            st.code(xml_output, language="xml")
 
 if __name__ == "__main__":
     main()
