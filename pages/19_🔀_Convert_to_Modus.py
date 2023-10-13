@@ -7,11 +7,24 @@ st.set_page_config(
     page_title="🔀 Modus Soil Test Converter 🔀",
     layout="wide"
 )
-st.warning('⚠️ **Caution!** ⚠️ This application has not been fully tested and may produce incorrect results. 🚫🐞')
+
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
 Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
 """)
+
+# Warning message
+st.warning("⚠️ This tool is still under development. Please verify results before use.")
+
+
+# Instructions inside an expander
+with st.expander("How to Use:", expanded=False):
+    st.write("""
+    1. **Upload** your soil test data file.
+    2. **Match** the columns in your file to the Modus soil test analysis elements and units.
+    3. **Convert** your data automatically converted to the Modus XML format.
+    4. **Copy/Paste** the generated XML into your file.
+    """)
 
 soil_test_analysis = [
     "ACE nitrogen (soil protein index)",
@@ -593,6 +606,7 @@ def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, 
     return prettify(root)
 
 def main():
+
     # Upload the file
     file = st.file_uploader("Choose a CSV, TXT, DBF or other delimited file", type=['csv', 'txt', 'dbf'])
     sample_id_col = ''  
@@ -623,22 +637,30 @@ def main():
 
         if st.button("Reset Selections"):
             st.experimental_rerun()
-
-        container = st.container()
         
-        for col_name in data.columns:
-            if col_name != sample_id_col:
-                with container:
-                    cols = st.columns(3)
-                    cols[0].write(col_name)
-                    selected_element = cols[1].selectbox("Element", options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
+        # Spacer
+        st.markdown('---')    
+
+        data_cols = [col for col in data.columns if col != sample_id_col]
+        
+        for i in range(0, len(data_cols), 3):
+            cols = st.columns(3)
+            
+            for j in range(3):
+                if i + j < len(data_cols):
+                    col_name = data_cols[i + j]
+                    cols[j].write(col_name)
+                    selected_element = cols[j].selectbox("Element", options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
                     if selected_element != 'Select Element':
                         matched_columns[col_name] = selected_element
                         if selected_element in default_units and default_units[selected_element]:
-                            selected_unit = cols[2].selectbox("Unit", options=['Select Unit'] + default_units[selected_element], key=f"unit_{col_name}")
+                            selected_unit = cols[j].selectbox("Unit", options=['Select Unit'] + default_units[selected_element], key=f"unit_{col_name}")
                             if selected_unit != 'Select Unit':
                                 unit_columns[col_name] = selected_unit
 
+        # Spacer
+        st.markdown('---')
+        
         if matched_columns:
             st.subheader("XML Output")
             xml_output = updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date)
@@ -646,5 +668,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
