@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="🔀 Modus Soil Test Converter 🔀",
     layout="wide"
 )
-st.warning("⚠️ This application is a work in progress. Currently, you cannot output files.")
+
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
 Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
@@ -561,31 +561,33 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
-def generate_xml(row, sample_id_col):
-    root = ET.Element("EventSamples")
-    soil = ET.SubElement(root, "Soil")
+def updated_generate_xml_v4(data, matched_columns, unit_columns, sample_id_col, sample_date, soil_texture, moisture_content):
+    root = ET.Element("ModusResult")
     
-    depthrefs = ET.SubElement(soil, "DepthRefs")
-    depthref = ET.SubElement(depthrefs, "DepthRef", DepthID="1")
-    ET.SubElement(depthref, "Name").text = "0 - 6"
-    ET.SubElement(depthref, "StartingDepth").text = "0"
-    ET.SubElement(depthref, "EndingDepth").text = "6"
-    ET.SubElement(depthref, "ColumnDepth").text = "6"
-    ET.SubElement(depthref, "DepthUnit").text = "in"
-    
-    soilsample = ET.SubElement(soil, "SoilSample")
-    samplemetadata = ET.SubElement(soilsample, "SampleMetaData")
-    ET.SubElement(samplemetadata, "SampleNumber").text = str(row[sample_id_col])
-    
-    depths = ET.SubElement(soilsample, "Depths")
-    depth = ET.SubElement(depths, "Depth", DepthID="1")
-    
-    for col, value in row.items():
-        if col != sample_id_col:
-            nutrientresult = ET.SubElement(depth, "NutrientResult")
-            ET.SubElement(nutrientresult, "Element").text = str(col)  # Explicitly cast column name to string
-            ET.SubElement(nutrientresult, "Value").text = str(value)  # Explicitly cast value to string
-            # Add other tags as needed (e.g., ModusTestID, ValueType, etc.)
+    for _, row in data.iterrows():
+        if sample_id_col not in row or pd.isnull(row[sample_id_col]):
+            continue  # Skip the row if the sample_id_col is not present or is null
+        
+        soil_sample = ET.SubElement(root, "SoilSample")
+        
+        samplemetadata = ET.SubElement(soil_sample, "SampleMetaData")
+        ET.SubElement(samplemetadata, "SampleNumber").text = str(row[sample_id_col])
+        ET.SubElement(samplemetadata, "OverwriteResult").text = "false"
+        ET.SubElement(samplemetadata, "Geometry")
+        
+        depths = ET.SubElement(soil_sample, "Depths")
+        depth = ET.SubElement(depths, "Depth", DepthID="1")
+        nutrient_results = ET.SubElement(depth, "NutrientResults")
+        
+        for col, value in row.items():
+            if col != sample_id_col:
+                nutrientresult = ET.SubElement(nutrient_results, "NutrientResult")
+                ET.SubElement(nutrientresult, "Element").text = matched_columns.get(col, "")
+                ET.SubElement(nutrientresult, "Value").text = str(value)
+                ET.SubElement(nutrientresult, "ModusTestID").text = matched_columns.get(col, "")
+                ET.SubElement(nutrientresult, "ValueType").text = "Measured"
+                ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")
+                ET.SubElement(nutrientresult, "ValueDesc").text = "VL"  # Placeholder value, adjust if needed
     
     return prettify(root)
 
@@ -611,9 +613,15 @@ def main():
         else:
             data = pd.read_csv(file, delimiter=delimiter, header=None)
 
+        st.write(data)  # Show the original dataframe
+
         sample_id_col = st.selectbox("Choose the 'Sample ID' column:", options=[''] + list(data.columns), key="sample_id_selectbox", index=0)
         
-        st.write(data)
+       # Sample Date, Soil Texture and Moisture Content inputs
+        sample_date = st.date_input("Sample Date")
+        soil_texture = st.text_input("Soil Texture", "")
+        moisture_content = st.text_input("Moisture Content", "")
+
 
         if st.button("Reset Selections"):
             st.experimental_rerun()
@@ -645,11 +653,9 @@ def main():
 
         data = data.sort_index()
 
-        st.write(data)
-
         if matched_columns:
             st.subheader("XML Output")
-            xml_output = generate_xml(data.iloc[0], sample_id_col)
+            xml_output = updated_generate_xml_v4(data, matched_columns, unit_columns, sample_id_col, sample_date, soil_texture, moisture_content)
             st.code(xml_output, language="xml")
 
 if __name__ == "__main__":
