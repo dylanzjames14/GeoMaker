@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="🔀 Modus Soil Test Converter 🔀",
     layout="wide"
 )
-
+st.warning('⚠️ **Caution!** ⚠️ This application has not been fully tested and may produce incorrect results. 🚫🐞')
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
 Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
@@ -401,7 +401,7 @@ default_units = {
     "beta-glucosidase": ['U/mg'],
     "bicarbonate": ['meq/L'],
     "boron": ['mg/dm3', 'mg/kg', 'ppm', 'meq/L', 'mg/m2'],
-    "buffer pH": ['standard pH unit'],
+    "buffer pH": ['None'],
     "bulk density": ['g/cm3'],
     "C:N ratio": ['Ratio'],
     "Ca + exchangable Mg": [],
@@ -490,7 +490,7 @@ default_units = {
     "particle density": ['g/cm3'],
     "particulate organic matter 53-2000 um": ['g/kg'],
     "permanganate-oxidizable carbon (POXC)": ['ppm', 'mg/kg'],
-    "pH": ['mg/kg', 'ppm', 'standard pH unit'],
+    "pH": ['mg/kg', 'ppm', 'None'],
     "phosphate": ['mg/kg', 'ppm'],
     "phospholipid fatty acid (PLFA)": ['ng/g'],
     "phosphomonoesterase": ['ug/g', 'mg/kg, ppm'],
@@ -561,7 +561,7 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
-def updated_generate_xml_v4(data, matched_columns, unit_columns, sample_id_col, sample_date, soil_texture, moisture_content):
+def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date):
     root = ET.Element("ModusResult")
     
     for _, row in data.iterrows():
@@ -573,7 +573,6 @@ def updated_generate_xml_v4(data, matched_columns, unit_columns, sample_id_col, 
         samplemetadata = ET.SubElement(soil_sample, "SampleMetaData")
         ET.SubElement(samplemetadata, "SampleNumber").text = str(row[sample_id_col])
         ET.SubElement(samplemetadata, "OverwriteResult").text = "false"
-        ET.SubElement(samplemetadata, "Geometry")
         
         depths = ET.SubElement(soil_sample, "Depths")
         depth = ET.SubElement(depths, "Depth", DepthID="1")
@@ -581,13 +580,15 @@ def updated_generate_xml_v4(data, matched_columns, unit_columns, sample_id_col, 
         
         for col, value in row.items():
             if col != sample_id_col:
-                nutrientresult = ET.SubElement(nutrient_results, "NutrientResult")
-                ET.SubElement(nutrientresult, "Element").text = matched_columns.get(col, "")
-                ET.SubElement(nutrientresult, "Value").text = str(value)
-                ET.SubElement(nutrientresult, "ModusTestID").text = matched_columns.get(col, "")
-                ET.SubElement(nutrientresult, "ValueType").text = "Measured"
-                ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")
-                ET.SubElement(nutrientresult, "ValueDesc").text = "VL"  # Placeholder value, adjust if needed
+                if col in matched_columns:  # Only process columns that have been matched
+                    nutrientresult = ET.SubElement(nutrient_results, "NutrientResult")
+                    ET.SubElement(nutrientresult, "Element").text = matched_columns.get(col, "")
+                    ET.SubElement(nutrientresult, "Value").text = str(value)
+                    ET.SubElement(nutrientresult, "ModusTestID").text = soil_test_analysis_ref.get(matched_columns.get(col, ""), [""])[0]  # Use the ref for ModusTestID
+                    ET.SubElement(nutrientresult, "ValueType").text = "Measured"
+                    ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")  # Fetch the unit from the unit_columns dictionary
+                    ET.SubElement(nutrientresult, "ValueDesc").text = "VL"  # Placeholder value, adjust if needed
+
     
     return prettify(root)
 
@@ -615,13 +616,10 @@ def main():
 
         st.write(data)  # Show the original dataframe
 
-        sample_id_col = st.selectbox("Choose the 'Sample ID' column:", options=[''] + list(data.columns), key="sample_id_selectbox", index=0)
+        sample_id_col = st.selectbox("Choose the 'Sample Number' column:", options=[''] + list(data.columns), key="sample_id_selectbox", index=0)
         
-       # Sample Date, Soil Texture and Moisture Content inputs
+        # Sample Date input
         sample_date = st.date_input("Sample Date")
-        soil_texture = st.text_input("Soil Texture", "")
-        moisture_content = st.text_input("Moisture Content", "")
-
 
         if st.button("Reset Selections"):
             st.experimental_rerun()
@@ -633,30 +631,20 @@ def main():
                 with container:
                     cols = st.columns(3)
                     cols[0].write(col_name)
-                    selected_analysis = cols[1].selectbox("Analysis", options=['Select Analysis Type'] + soil_test_analysis, key=f"analysis_{col_name}")
-                    if selected_analysis != 'Select Analysis Type':
-                        matched_columns[col_name] = selected_analysis
-                        if selected_analysis in default_units and default_units[selected_analysis]:
-                            selected_unit = cols[2].selectbox("Unit", options=['Select Unit'] + default_units[selected_analysis], key=f"unit_{col_name}")
+                    selected_element = cols[1].selectbox("Element", options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
+                    if selected_element != 'Select Element':
+                        matched_columns[col_name] = selected_element
+                        if selected_element in default_units and default_units[selected_element]:
+                            selected_unit = cols[2].selectbox("Unit", options=['Select Unit'] + default_units[selected_element], key=f"unit_{col_name}")
                             if selected_unit != 'Select Unit':
                                 unit_columns[col_name] = selected_unit
 
-        data = data.astype(str)
-
-        unit_row = [unit_columns.get(col, '') for col in data.columns]
-        data.loc[-1] = unit_row
-        data.index = data.index + 1
-
-        analysis_row = [matched_columns.get(col, '') for col in data.columns]
-        data.loc[-2] = analysis_row
-        data.index = data.index + 1
-
-        data = data.sort_index()
-
         if matched_columns:
             st.subheader("XML Output")
-            xml_output = updated_generate_xml_v4(data, matched_columns, unit_columns, sample_id_col, sample_date, soil_texture, moisture_content)
+            xml_output = updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date)
             st.code(xml_output, language="xml")
 
 if __name__ == "__main__":
     main()
+
+
