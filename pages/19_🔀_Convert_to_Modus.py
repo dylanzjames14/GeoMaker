@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import io
 
 st.set_page_config(
     page_title="🔀 Modus Soil Test Converter 🔀",
@@ -10,7 +11,7 @@ st.set_page_config(
 
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
-Welcome to the Modus Soil Test Converter!
+Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
 """)
 
 # Warning message
@@ -568,6 +569,10 @@ default_units = {
     "zinc index": ['None'],
     "Zn:Cu ratio": ['ppm', 'none'],}
 
+def convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date):
+    xml_data = updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date)
+    return xml_data
+
 def prettify(elem):
     """Return a pretty-printed XML string for the Element."""
     rough_string = ET.tostring(elem, 'utf-8')
@@ -606,12 +611,13 @@ def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, 
     return prettify(root)
 
 def main():
-
-    # Upload the file
-    file = st.file_uploader("Choose a CSV, TXT, DBF or other delimited file", type=['csv', 'txt', 'dbf'])
+    # Initialize variables
     sample_id_col = ''  
     matched_columns = {}
     unit_columns = {}
+
+    # Upload the file
+    file = st.file_uploader("Choose a CSV, TXT, DBF or other delimited file", type=['csv', 'txt', 'dbf'])
 
     # Check if a file is uploaded
     if file:
@@ -665,6 +671,13 @@ def main():
             st.subheader("XML Output")
             xml_output = updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date)
             st.code(xml_output, language="xml")
+
+            # Convert data to XML
+            xml_data = convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date)
+
+            # Offer download as XML
+            xml_filename = "converted_data.xml"
+            st.download_button(label="Download XML", data=io.BytesIO(xml_data.encode()), file_name=xml_filename, mime="text/xml")
 
 if __name__ == "__main__":
     main()
