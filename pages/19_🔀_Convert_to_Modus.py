@@ -581,10 +581,16 @@ def prettify(elem):
     return reparsed.toprettyxml(indent="  ")
 
 def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date):
-    root = ET.Element("ModusResult")
+    root = ET.Element("ModusResult", {
+        "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        "Version": "1.0",
+        "xsi:noNamespaceSchemaLocation": "modus_result.xsd"
+    })
     
     # Event and its metadata
     event = ET.SubElement(root, "Event")
+    
+    # Event MetaData
     event_metadata = ET.SubElement(event, "EventMetaData")
     ET.SubElement(event_metadata, "EventCode").text = "1234-ABCD"
     ET.SubElement(event_metadata, "EventDate").text = "2023-10-12"
@@ -594,13 +600,13 @@ def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, 
 
     # Lab metadata
     lab_metadata = ET.SubElement(event, "LabMetaData")
-    ET.SubElement(lab_metadata, "LabName").text = "Geomaker Conversion"
+    ET.SubElement(lab_metadata, "LabName").text = "GeoMaker Analytical"
     ET.SubElement(lab_metadata, "LabID").text = "1234567"
     ET.SubElement(lab_metadata, "LabEventID").text = "1234567"
     test_package_refs = ET.SubElement(lab_metadata, "TestPackageRefs")
     test_package_ref = ET.SubElement(test_package_refs, "TestPackageRef", {'TestPackageID': "1"})
-    ET.SubElement(test_package_ref, "Name").text = "Unknown"
-    ET.SubElement(test_package_ref, "LabBillingCode").text = "Unknown"
+    ET.SubElement(test_package_ref, "Name").text = "Gold Package"
+    ET.SubElement(test_package_ref, "LabBillingCode").text = "1234567"
     ET.SubElement(lab_metadata, "ReceivedDate").text = "2023-10-12T00:00:00-06:00"
     ET.SubElement(lab_metadata, "ProcessedDate").text = "2023-10-12T00:00:00-06:00"
     
@@ -611,15 +617,27 @@ def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, 
     ET.SubElement(report, "FileDescription")
     ET.SubElement(report, "File")
 
+    # EventSamples, Soil, and DepthRefs Structure
+    event_samples = ET.SubElement(event, "EventSamples")
+    soil = ET.SubElement(event_samples, "Soil")
+    depth_refs = ET.SubElement(soil, "DepthRefs")
+    depth_ref = ET.SubElement(depth_refs, "DepthRef", DepthID="1")
+    ET.SubElement(depth_ref, "Name").text = "0 - 6"
+    ET.SubElement(depth_ref, "StartingDepth").text = "0"
+    ET.SubElement(depth_ref, "EndingDepth").text = "6"
+    ET.SubElement(depth_ref, "ColumnDepth").text = "6"
+    ET.SubElement(depth_ref, "DepthUnit").text = "in"
+    
     for _, row in data.iterrows():
         if sample_id_col not in row or pd.isnull(row[sample_id_col]):
             continue  # Skip the row if the sample_id_col is not present or is null
         
-        soil_sample = ET.SubElement(root, "EventSample")
+        soil_sample = ET.SubElement(soil, "SoilSample")
         
         samplemetadata = ET.SubElement(soil_sample, "SampleMetaData")
         ET.SubElement(samplemetadata, "SampleNumber").text = str(row[sample_id_col])
         ET.SubElement(samplemetadata, "OverwriteResult").text = "false"
+        ET.SubElement(samplemetadata, "Geometry")
         
         depths = ET.SubElement(soil_sample, "Depths")
         depth = ET.SubElement(depths, "Depth", DepthID="1")
@@ -631,12 +649,11 @@ def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, 
                     nutrientresult = ET.SubElement(nutrient_results, "NutrientResult")
                     ET.SubElement(nutrientresult, "Element").text = matched_columns.get(col, "")
                     ET.SubElement(nutrientresult, "Value").text = str(value)
-                    ET.SubElement(nutrientresult, "ModusTestID").text = soil_test_analysis_ref.get(matched_columns.get(col, ""), [""])[0]  # Use the ref for ModusTestID
+                    ET.SubElement(nutrientresult, "ModusTestID").text = "S-pH-B2-1:7.01.03"  # Placeholder value
                     ET.SubElement(nutrientresult, "ValueType").text = "Measured"
                     ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")  # Fetch the unit from the unit_columns dictionary
                     ET.SubElement(nutrientresult, "ValueDesc").text = "VL"  # Placeholder value, adjust if needed
 
-    
     return prettify(root)
 
 def main():
