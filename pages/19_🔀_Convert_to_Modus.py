@@ -569,6 +569,7 @@ default_units = {
     "zinc index": ['None'],
     "Zn:Cu ratio": ['ppm', 'none'],}
 
+
 def convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date):
     xml_data = updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date)
     return xml_data
@@ -582,11 +583,38 @@ def prettify(elem):
 def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date):
     root = ET.Element("ModusResult")
     
+    # Event and its metadata
+    event = ET.SubElement(root, "Event")
+    event_metadata = ET.SubElement(event, "EventMetaData")
+    ET.SubElement(event_metadata, "EventCode").text = "1234-ABCD"
+    ET.SubElement(event_metadata, "EventDate").text = "2023-10-12"
+    event_type = ET.SubElement(event_metadata, "EventType")
+    ET.SubElement(event_metadata, "EventExpirationDate").text = "2023-10-19"
+
+    # Lab metadata
+    lab_metadata = ET.SubElement(event, "LabMetaData")
+    ET.SubElement(lab_metadata, "LabName").text = "Geomaker Conversion"
+    ET.SubElement(lab_metadata, "LabID").text = "1234567"
+    ET.SubElement(lab_metadata, "LabEventID").text = "1234567"
+    test_package_refs = ET.SubElement(lab_metadata, "TestPackageRefs")
+    test_package_ref = ET.SubElement(test_package_refs, "TestPackageRef", {'TestPackageID': "1"})
+    ET.SubElement(test_package_ref, "Name").text = "Unknown"
+    ET.SubElement(test_package_ref, "LabBillingCode").text = "Unknown"
+    ET.SubElement(lab_metadata, "ReceivedDate").text = "2023-10-12T00:00:00-06:00"
+    ET.SubElement(lab_metadata, "ProcessedDate").text = "2023-10-12T00:00:00-06:00"
+    
+    # Reports
+    reports = ET.SubElement(lab_metadata, "Reports")
+    report = ET.SubElement(reports, "Report")
+    ET.SubElement(report, "LabReportID")
+    ET.SubElement(report, "FileDescription")
+    ET.SubElement(report, "File")
+
     for _, row in data.iterrows():
         if sample_id_col not in row or pd.isnull(row[sample_id_col]):
             continue  # Skip the row if the sample_id_col is not present or is null
         
-        soil_sample = ET.SubElement(root, "SoilSample")
+        soil_sample = ET.SubElement(root, "EventSample")
         
         samplemetadata = ET.SubElement(soil_sample, "SampleMetaData")
         ET.SubElement(samplemetadata, "SampleNumber").text = str(row[sample_id_col])
