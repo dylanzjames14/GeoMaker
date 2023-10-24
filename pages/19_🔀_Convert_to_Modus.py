@@ -571,7 +571,7 @@ default_units = {
 
 
 def convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date):
-    xml_data = updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date)
+    xml_data = updated_generate_xml_v6_adjusted(data, matched_columns, unit_columns, sample_id_col, sample_date)
     return xml_data
 
 def prettify(elem):
@@ -580,7 +580,7 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
-def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date):
+def updated_generate_xml_v6_adjusted(data, matched_columns, unit_columns, sample_id_col, sample_date):
     root = ET.Element("ModusResult", {
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "Version": "1.0",
@@ -649,7 +649,7 @@ def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, 
                     nutrientresult = ET.SubElement(nutrient_results, "NutrientResult")
                     ET.SubElement(nutrientresult, "Element").text = matched_columns.get(col, "")
                     ET.SubElement(nutrientresult, "Value").text = str(value)
-                    ET.SubElement(nutrientresult, "ModusTestID").text = "S-pH-B2-1:7.01.03"  # Placeholder value
+                    ET.SubElement(nutrientresult, "ModusTestID").text = soil_test_analysis_ref.get(matched_columns.get(col, ""), [""])[0]  # Use the ref for ModusTestID
                     ET.SubElement(nutrientresult, "ValueType").text = "Measured"
                     ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")  # Fetch the unit from the unit_columns dictionary
                     ET.SubElement(nutrientresult, "ValueDesc").text = "VL"  # Placeholder value, adjust if needed
@@ -715,7 +715,7 @@ def main():
         
         if matched_columns:
             st.subheader("XML Output")
-            xml_output = updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, sample_date)
+            xml_output = updated_generate_xml_v6_adjusted(data, matched_columns, unit_columns, sample_id_col, sample_date)
             st.code(xml_output, language="xml")
 
             # Convert data to XML
