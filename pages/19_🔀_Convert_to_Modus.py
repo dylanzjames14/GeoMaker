@@ -571,7 +571,7 @@ default_units = {
 
 
 def convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date):
-    xml_data = updated_generate_xml_v6_adjusted(data, matched_columns, unit_columns, sample_id_col, sample_date)
+    xml_data = updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sample_id_col, sample_date)
     return xml_data
 
 def prettify(elem):
@@ -580,7 +580,7 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
-def updated_generate_xml_v6_adjusted(data, matched_columns, unit_columns, sample_id_col, sample_date):
+def updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sample_id_col, sample_date):
     root = ET.Element("ModusResult", {
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "Version": "1.0",
@@ -630,29 +630,30 @@ def updated_generate_xml_v6_adjusted(data, matched_columns, unit_columns, sample
     
     for _, row in data.iterrows():
         if sample_id_col not in row or pd.isnull(row[sample_id_col]):
-            continue  # Skip the row if the sample_id_col is not present or is null
+            continue
         
         soil_sample = ET.SubElement(soil, "SoilSample")
         
         samplemetadata = ET.SubElement(soil_sample, "SampleMetaData")
         ET.SubElement(samplemetadata, "SampleNumber").text = str(row[sample_id_col])
         ET.SubElement(samplemetadata, "OverwriteResult").text = "false"
-        ET.SubElement(samplemetadata, "Geometry")
+        ET.SubElement(samplemetadata, "Geometry")  # Empty Geometry tag
         
+        # Re-introduce the Depths, Depth, and NutrientResults structure
         depths = ET.SubElement(soil_sample, "Depths")
         depth = ET.SubElement(depths, "Depth", DepthID="1")
         nutrient_results = ET.SubElement(depth, "NutrientResults")
         
         for col, value in row.items():
             if col != sample_id_col:
-                if col in matched_columns:  # Only process columns that have been matched
+                if col in matched_columns:  
                     nutrientresult = ET.SubElement(nutrient_results, "NutrientResult")
                     ET.SubElement(nutrientresult, "Element").text = matched_columns.get(col, "")
                     ET.SubElement(nutrientresult, "Value").text = str(value)
                     ET.SubElement(nutrientresult, "ModusTestID").text = soil_test_analysis_ref.get(matched_columns.get(col, ""), [""])[0]  # Use the ref for ModusTestID
                     ET.SubElement(nutrientresult, "ValueType").text = "Measured"
-                    ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")  # Fetch the unit from the unit_columns dictionary
-                    ET.SubElement(nutrientresult, "ValueDesc").text = "VL"  # Placeholder value, adjust if needed
+                    ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")
+                    ET.SubElement(nutrientresult, "ValueDesc").text = "VL"
 
     return prettify(root)
 
@@ -715,7 +716,7 @@ def main():
         
         if matched_columns:
             st.subheader("XML Output")
-            xml_output = updated_generate_xml_v6_adjusted(data, matched_columns, unit_columns, sample_id_col, sample_date)
+            xml_output = updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sample_id_col, sample_date)
             st.code(xml_output, language="xml")
 
             # Convert data to XML
