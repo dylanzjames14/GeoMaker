@@ -646,7 +646,7 @@ def updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sampl
         
         for col, value in row.items():
             if col != sample_id_col:
-                if col in matched_columns:  
+                if col in matched_columns and not pd.isna(value):  
                     nutrientresult = ET.SubElement(nutrient_results, "NutrientResult")
                     ET.SubElement(nutrientresult, "Element").text = matched_columns.get(col, "")
                     ET.SubElement(nutrientresult, "Value").text = str(value)
@@ -654,6 +654,7 @@ def updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sampl
                     ET.SubElement(nutrientresult, "ValueType").text = "Measured"
                     ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")
                     ET.SubElement(nutrientresult, "ValueDesc").text = "VL"
+
 
     return prettify(root)
 
