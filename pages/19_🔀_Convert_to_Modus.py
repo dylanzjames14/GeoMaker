@@ -589,6 +589,7 @@ def updated_generate_xml_v6(data, matched_columns, unit_columns, sample_id_col, 
     ET.SubElement(event_metadata, "EventCode").text = "1234-ABCD"
     ET.SubElement(event_metadata, "EventDate").text = "2023-10-12"
     event_type = ET.SubElement(event_metadata, "EventType")
+    ET.SubElement(event_type, "Soil")
     ET.SubElement(event_metadata, "EventExpirationDate").text = "2023-10-19"
 
     # Lab metadata
