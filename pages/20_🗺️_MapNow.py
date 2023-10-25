@@ -2,7 +2,7 @@ import folium
 import streamlit as st
 from folium.plugins import Draw
 from streamlit_folium import st_folium
-from shapely.geometry import shape
+from shapely.geometry import shape, mapping
 
 # Only initialize session state if it doesn't exist yet
 if 'drawn_geometries' not in st.session_state:
@@ -104,9 +104,8 @@ for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
         with col5:
             geo_entry['field'] = st.text_input(f"Field", geo_entry.get('field', ''), key=f"field_input_{idx}")
         with st.expander("View Details"):
-            st.json(geo_entry['geometry'])
-            # Get the centroid of the polygon
             s = shape(geo_entry['geometry'])
+            st.write(s)
             centroid = s.centroid
             st.write(f"Centroid: {centroid.x}, {centroid.y}")
 
