@@ -14,17 +14,18 @@ st.warning("🚧 Work in Progress 🚧")
 # Expander for Instructions and Welcome Message
 with st.expander("Instructions & Welcome Message", expanded=False):
     st.write("""
-    Welcome to the Field Boundary Drawer! 
-    Here, you can outline fields on the map and specify details for each drawn field.
+    Welcome to MapNow! 
+    Here, you can outline fields and place markers on the map, then specify details for each.
     """)
     
     st.markdown("### Instructions:")
     st.markdown("""
-    1. **Draw a field boundary** on the map.
-    2. Once drawn, the boundary will appear below the map with inputs to specify details.
-    3. Use the color picker to choose a color for the field boundary. 
-    4. Provide details in the "Grower", "Farm", and "Field" inputs.
-    5. To clear all fields and start fresh, click the "Clear all polygons" button.
+    1. **Draw a field boundary or place a marker** on the map.
+    2. Once drawn or placed, the boundary/marker will appear below the map with inputs to specify details.
+    3. Use the color picker to choose a color for the field boundary or marker. 
+    4. For fields, provide details in the "Grower", "Farm", and "Field" inputs.
+    5. For markers, provide a label.
+    6. To clear all fields and markers and start fresh, click the "Clear all" button.
     """)
 
 # Initial location
@@ -45,15 +46,17 @@ draw_options = {
     "rectangle": True,
     "polygon": True,
     "circlemarker": False,
-    "marker": False
+    "marker": True  # Allow markers
 }
 
 draw_control = Draw(draw_options=draw_options)
 draw_control.add_to(m)
 
-# Check if 'drawn_geometries' exists in session state, if not initialize it
-if 'drawn_geometries' not in st.session_state:
+# Check session state
+if 'initialized' not in st.session_state:
     st.session_state.drawn_geometries = []
+    st.session_state.drawn_markers = []  # Initialize the markers list
+    st.session_state.initialized = True
 
 # Display the map and capture any drawn geometries
 returned_objects = st_folium(m, width='100%', height=650)
@@ -61,20 +64,29 @@ returned_objects = st_folium(m, width='100%', height=650)
 # If there are any returned drawn geometries, add them to the session state
 if returned_objects and 'all_drawings' in returned_objects and returned_objects['all_drawings']:
     for feature in returned_objects['all_drawings']:
-        if isinstance(feature, dict) and 'geometry' in feature:
+        if feature['geometry']['type'] == 'Polygon':
             existing_geometries = [entry['geometry'] for entry in st.session_state.drawn_geometries if 'geometry' in entry]
             if feature['geometry'] not in existing_geometries:
                 st.session_state.drawn_geometries.append({
                     'geometry': feature['geometry'],
-                    'color': '#000000',  # default color
+                    'color': '#000000',
                     'grower': '',
                     'farm': '',
                     'field': ''
                 })
+        elif feature['geometry']['type'] == 'Point':
+            existing_markers = [entry['geometry'] for entry in st.session_state.drawn_markers if 'geometry' in entry]
+            if feature['geometry'] not in existing_markers:
+                st.session_state.drawn_markers.append({
+                    'geometry': feature['geometry'],
+                    'color': '#000000',
+                    'label': ''
+                })
 
-# Button to clear all polygons
-if st.button("Clear all polygons"):
+# Button to clear all polygons and markers
+if st.button("Clear all"):
     st.session_state.drawn_geometries = []
+    st.session_state.drawn_markers = []
 
 # Display the list of drawn geometries below the map
 for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
@@ -83,10 +95,21 @@ for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
         with col1:
             st.subheader(f"Polygon {idx+1}")
         with col2:
-            geo_entry['color'] = st.color_picker("Pick a color", geo_entry.get('color', '#000000'))
+            geo_entry['color'] = st.color_picker("Pick a color", geo_entry.get('color', '#000000'), key=f"color_picker_{idx}")
         with col3:
-            geo_entry['grower'] = st.text_input(f"Grower", geo_entry.get('grower', ''))
+            geo_entry['grower'] = st.text_input(f"Grower", geo_entry.get('grower', ''), key=f"grower_input_{idx}")
         with col4:
-            geo_entry['farm'] = st.text_input(f"Farm", geo_entry.get('farm', ''))
+            geo_entry['farm'] = st.text_input(f"Farm", geo_entry.get('farm', ''), key=f"farm_input_{idx}")
         with col5:
-            geo_entry['field'] = st.text_input(f"Field", geo_entry.get('field', ''))
+            geo_entry['field'] = st.text_input(f"Field", geo_entry.get('field', ''), key=f"field_input_{idx}")
+
+# Display the list of drawn markers below the drawn geometries
+for idx, marker_entry in enumerate(st.session_state.drawn_markers):
+    if 'geometry' in marker_entry:
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            st.subheader(f"Marker {idx+1}")
+        with col2:
+            marker_entry['color'] = st.color_picker("Pick a color", marker_entry.get('color', '#000000'), key=f"marker_color_picker_{idx}")
+        with col3:
+            marker_entry['label'] = st.text_input(f"Label", marker_entry.get('label', ''), key=f"marker_label_input_{idx}")
