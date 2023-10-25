@@ -17,14 +17,12 @@ Welcome to the Modus Soil Test Converter! Transform your soil test data into the
 # Warning message
 st.warning("⚠️ This tool is still under development. Please verify results before use.")
 
-
-# Instructions inside an expander
+# Instructions
 with st.expander("How to Use:", expanded=False):
     st.write("""
     1. **Upload** your soil test data file.
     2. **Match** the columns in your file to the Modus soil test analysis elements and units.
-    3. **Convert** your data automatically converted to the Modus XML format.
-    4. **Copy/Paste** the generated XML into your file.
+    3. **Download** the generated XML file by clicking on the "Download XML" button.
     """)
 
 soil_test_analysis = [
@@ -581,22 +579,25 @@ def prettify(elem):
     return reparsed.toprettyxml(indent="  ")
 
 def updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sample_id_col, sample_date):
+    formatted_sample_date = sample_date.strftime('%Y-%m-%d')
+    formatted_sample_datetime = f"{formatted_sample_date}T00:00:00-06:00"  # Adding time and timezone to the formatted date
+
     root = ET.Element("ModusResult", {
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "Version": "1.0",
         "xsi:noNamespaceSchemaLocation": "modus_result.xsd"
     })
-    
+
     # Event and its metadata
     event = ET.SubElement(root, "Event")
     
     # Event MetaData
     event_metadata = ET.SubElement(event, "EventMetaData")
     ET.SubElement(event_metadata, "EventCode").text = "1234-ABCD"
-    ET.SubElement(event_metadata, "EventDate").text = "2023-10-12"
+    ET.SubElement(event_metadata, "EventDate").text = formatted_sample_date
     event_type = ET.SubElement(event_metadata, "EventType")
     ET.SubElement(event_type, "Soil")
-    ET.SubElement(event_metadata, "EventExpirationDate").text = "2023-10-19"
+    ET.SubElement(event_metadata, "EventExpirationDate").text = formatted_sample_date
 
     # Lab metadata
     lab_metadata = ET.SubElement(event, "LabMetaData")
@@ -607,8 +608,8 @@ def updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sampl
     test_package_ref = ET.SubElement(test_package_refs, "TestPackageRef", {'TestPackageID': "1"})
     ET.SubElement(test_package_ref, "Name").text = "Gold Package"
     ET.SubElement(test_package_ref, "LabBillingCode").text = "1234567"
-    ET.SubElement(lab_metadata, "ReceivedDate").text = "2023-10-12T00:00:00-06:00"
-    ET.SubElement(lab_metadata, "ProcessedDate").text = "2023-10-12T00:00:00-06:00"
+    ET.SubElement(lab_metadata, "ReceivedDate").text = formatted_sample_datetime
+    ET.SubElement(lab_metadata, "ProcessedDate").text = formatted_sample_datetime
     
     # Reports
     reports = ET.SubElement(lab_metadata, "Reports")
@@ -655,7 +656,6 @@ def updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sampl
                     ET.SubElement(nutrientresult, "ValueUnit").text = unit_columns.get(col, "")
                     ET.SubElement(nutrientresult, "ValueDesc").text = "VL"
 
-
     return prettify(root)
 
 def main():
@@ -676,21 +676,21 @@ def main():
                 delimiter = st.text_input("Specify the delimiter:", value=",")
             
             header = st.checkbox("Does the file have a header?", value=False)
+            
+            if header:
+                data = pd.read_csv(file, delimiter=delimiter)
+            else:
+                data = pd.read_csv(file, delimiter=delimiter, header=None)
+
+            sample_id_col = st.selectbox("Choose the 'Sample Number' column:", options=[''] + list(data.columns), key="sample_id_selectbox", index=0)
         
-        if header:
-            data = pd.read_csv(file, delimiter=delimiter)
-        else:
-            data = pd.read_csv(file, delimiter=delimiter, header=None)
+            # Sample Date input
+            sample_date = st.date_input("Sample Date")
+
+            if st.button("Reset Selections"):
+                st.experimental_rerun()
 
         st.write(data)  # Show the original dataframe
-
-        sample_id_col = st.selectbox("Choose the 'Sample Number' column:", options=[''] + list(data.columns), key="sample_id_selectbox", index=0)
-        
-        # Sample Date input
-        sample_date = st.date_input("Sample Date")
-
-        if st.button("Reset Selections"):
-            st.experimental_rerun()
         
         # Spacer
         st.markdown('---')    
@@ -703,8 +703,7 @@ def main():
             for j in range(3):
                 if i + j < len(data_cols):
                     col_name = data_cols[i + j]
-                    cols[j].write(col_name)
-                    selected_element = cols[j].selectbox("Element", options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
+                    selected_element = cols[j].selectbox(col_name, options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
                     if selected_element != 'Select Element':
                         matched_columns[col_name] = selected_element
                         if selected_element in default_units and default_units[selected_element]:
@@ -716,9 +715,9 @@ def main():
         st.markdown('---')
         
         if matched_columns:
-            st.subheader("XML Output")
+            # st.subheader("XML Output")
             xml_output = updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sample_id_col, sample_date)
-            st.code(xml_output, language="xml")
+            # st.code(xml_output, language="xml")
 
             # Convert data to XML
             xml_data = convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date)
