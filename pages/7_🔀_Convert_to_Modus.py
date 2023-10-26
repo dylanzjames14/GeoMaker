@@ -11,7 +11,7 @@ st.set_page_config(
 
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
-Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks!
+Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
 """)
 
 # Warning message
@@ -703,7 +703,7 @@ def main():
             for j in range(3):
                 if i + j < len(data_cols):
                     col_name = data_cols[i + j]
-                    selected_element = cols[j].selectbox(col_name, options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
+                    selected_element = cols[j].selectbox(str(col_name), options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
                     if selected_element != 'Select Element':
                         matched_columns[col_name] = selected_element
                         if selected_element in default_units and default_units[selected_element]:
