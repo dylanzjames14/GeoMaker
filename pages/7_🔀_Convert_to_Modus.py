@@ -11,7 +11,7 @@ st.set_page_config(
 
 st.title("🔀 Modus Soil Test Converter 🔀")
 st.write("""
-Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks. Say goodbye to the hassle of manual conversions!
+Welcome to the Modus Soil Test Converter! Transform your soil test data into the standardized Modus format with just a few clicks!
 """)
 
 # Warning message
@@ -691,25 +691,27 @@ def main():
                 st.experimental_rerun()
 
         st.write(data)  # Show the original dataframe
-        
-        # Spacer
-        st.markdown('---')    
+
 
         data_cols = [col for col in data.columns if col != sample_id_col]
-        
-        for i in range(0, len(data_cols), 3):
-            cols = st.columns(3)
+
+        for i in range(0, len(data_cols), 5):
+            cols = st.columns(5)
             
-            for j in range(3):
+            for j in range(5):
                 if i + j < len(data_cols):
                     col_name = data_cols[i + j]
-                    selected_element = cols[j].selectbox(str(col_name), options=['Select Element'] + soil_test_analysis, key=f"element_{col_name}")
-                    if selected_element != 'Select Element':
+                    selected_element = cols[j].selectbox(str(col_name), options=['Select Analysis'] + soil_test_analysis, key=f"element_{col_name}")
+                    if selected_element != 'Select Analysis':
                         matched_columns[col_name] = selected_element
                         if selected_element in default_units and default_units[selected_element]:
                             selected_unit = cols[j].selectbox("Unit", options=['Select Unit'] + default_units[selected_element], key=f"unit_{col_name}")
                             if selected_unit != 'Select Unit':
                                 unit_columns[col_name] = selected_unit
+
+            # Add a separator if it's not the last set of elements
+            if i + 2 < len(data_cols):
+                st.markdown('---')  # This adds a blank line as a separator
 
         # Spacer
         st.markdown('---')
