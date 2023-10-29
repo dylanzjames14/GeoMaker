@@ -659,6 +659,32 @@ def updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sampl
     return prettify(root)
 
 def main():
+    # Initialize the session state variable for XML readiness
+    if 'xml_ready' not in st.session_state:
+        st.session_state.xml_ready = False
+
+    # Custom CSS to create a fixed notification at the bottom-right corner
+    if st.session_state.xml_ready:
+        st.markdown("""
+            <style>
+                .floating-notification {
+                    position: fixed;
+                    top: 50px;
+                    left: 55%;  /* Position at the center horizontally */
+                    transform: translateX(-50%);  /* Adjust the position to be truly centered */
+                    z-index: 9999;
+                    background-color: #4CAF50;  /* Bright green background */
+                    padding: 30px 50px;  /* Even more padding for a bigger notification */
+                    border-radius: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    font-size: 30px;  /* Slightly increased font size for better visibility */
+                }
+            </style>
+            <div class="floating-notification">
+                📥 Your Modus file is ready! Scroll to the bottom to download. 📥
+            </div>
+        """, unsafe_allow_html=True)
+    
     # Initialize variables
     sample_id_col = ''  
     matched_columns = {}
@@ -723,6 +749,9 @@ def main():
 
             # Convert data to XML
             xml_data = convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date)
+
+            # Set the session state variable to indicate XML is ready
+            st.session_state.xml_ready = True
 
             # Offer download as XML
             xml_filename = "converted_data.xml"
