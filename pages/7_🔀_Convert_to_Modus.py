@@ -669,15 +669,14 @@ def main():
             <style>
                 .floating-notification {
                     position: fixed;
-                    top: 50px;
-                    left: 55%;  /* Position at the center horizontally */
-                    transform: translateX(-50%);  /* Adjust the position to be truly centered */
+                    bottom: 10px;
+                    right: 10px;
                     z-index: 9999;
                     background-color: #4CAF50;  /* Bright green background */
-                    padding: 30px 50px;  /* Even more padding for a bigger notification */
-                    border-radius: 10px;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                    font-size: 30px;  /* Slightly increased font size for better visibility */
+                    padding: 15px 25px;  /* Adjust padding for a smaller notification */
+                    border-radius: 5px;
+                    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+                    font-size: 16px;  /* Adjust font size for better visibility */
                 }
             </style>
             <div class="floating-notification">
