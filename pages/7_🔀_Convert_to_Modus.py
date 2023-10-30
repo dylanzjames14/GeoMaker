@@ -567,6 +567,8 @@ default_units = {
     "zinc index": ['None'],
     "Zn:Cu ratio": ['ppm', 'none'],}
 
+def reset_session_state():
+    st.session_state.xml_ready = False
 
 def convert_to_xml(data, matched_columns, unit_columns, sample_id_col, sample_date):
     xml_data = updated_generate_xml_v6_corrected(data, matched_columns, unit_columns, sample_id_col, sample_date)
@@ -754,7 +756,12 @@ def main():
 
             # Offer download as XML
             xml_filename = "converted_data.xml"
-            st.download_button(label="Download XML", data=io.BytesIO(xml_data.encode()), file_name=xml_filename, mime="text/xml")
-
+            st.download_button(
+                label="Download XML", 
+                data=io.BytesIO(xml_data.encode()), 
+                file_name=xml_filename, 
+                mime="text/xml", 
+                on_click=reset_session_state
+            )
 if __name__ == "__main__":
     main()
