@@ -36,6 +36,11 @@ with st.expander("Instructions & Welcome Message", expanded=False):
     6. To clear all fields and markers and start fresh, click the "Clear all" button.
     """)
 
+# Initialize session state for legend entries if not already present
+if 'legend_entries' not in st.session_state:
+    st.session_state.legend_entries = {}
+
+
 # Initial location
 location = [36.1256, -97.0665]
 
@@ -70,7 +75,7 @@ if returned_objects and 'all_drawings' in returned_objects and returned_objects[
             if feature['geometry'] not in existing_geometries:
                 st.session_state.drawn_geometries.append({
                     'geometry': feature['geometry'],
-                    'color': '#000000',
+                    'color': '#FFFFFF',
                     'grower': '',
                     'farm': '',
                     'field': ''
@@ -80,7 +85,7 @@ if returned_objects and 'all_drawings' in returned_objects and returned_objects[
             if feature['geometry'] not in existing_markers:
                 st.session_state.drawn_markers.append({
                     'geometry': feature['geometry'],
-                    'color': '#000000',
+                    'color': '#FFFFFF',
                     'label': ''
                 })
 
@@ -89,12 +94,15 @@ if st.button("Reset all"):
     st.session_state.drawn_geometries = []
     st.session_state.drawn_markers = []
 
+# Display the Fields
+st.subheader("Fields")
+
 # Display the list of drawn geometries below the map
 for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
     if 'geometry' in geo_entry:
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            st.subheader(f"Field {idx+1}")
+            st.write(f"Field {idx+1}")
         with col2:
             geo_entry['color'] = st.color_picker("Pick a color", geo_entry.get('color', '#000000'), key=f"color_picker_{idx}")
         with col3:
@@ -109,15 +117,37 @@ for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
             centroid = s.centroid
             st.write(f"Centroid: {centroid.x}, {centroid.y}")
 
+# Display the Map Labels
+st.subheader("Map Labels")
+
 # Display the list of drawn markers below the drawn geometries
 for idx, marker_entry in enumerate(st.session_state.drawn_markers):
     if 'geometry' in marker_entry:
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            st.subheader(f"Map Label {idx+1}")
+            st.write(f"Map Label {idx+1}")
         with col2:
             marker_entry['color'] = st.color_picker("Pick a color", marker_entry.get('color', '#000000'), key=f"marker_color_picker_{idx}")
         with col3:
             marker_entry['label'] = st.text_input(f"Label", marker_entry.get('label', ''), key=f"marker_label_input_{idx}")
         with st.expander("View Coordinates"):
             st.write(f"Lat: {marker_entry['geometry']['coordinates'][1]}, Lon: {marker_entry['geometry']['coordinates'][0]}")
+
+# Collect all the colors used in geometries and markers
+all_colors = set([geo_entry['color'] for geo_entry in st.session_state.drawn_geometries])
+all_colors.update([marker_entry['color'] for marker_entry in st.session_state.drawn_markers])
+
+# Display the legend at the bottom of the page
+st.subheader("Legend")
+
+# Check and prompt for descriptions of new colors
+for color in all_colors:
+    if color not in st.session_state.legend_entries:
+        # Display a colored block with an input next to it
+        st.markdown(f"<div style='display: inline-block; margin-right: 10px; vertical-align: middle;'><span style='display: inline-block; width: 25px; height: 25px; background-color: {color}; margin-right: 5px;'></span></div>", unsafe_allow_html=True)
+        description = st.text_input(f"Label for color {color}", key=f"legend_description_{color}")
+        if description:
+            st.session_state.legend_entries[color] = description
+    else:
+        # If color already has a description, display it
+        st.markdown(f"<div style='display: inline-block; margin-right: 10px;'><span style='display: inline-block; width: 25px; height: 25px; background-color: {color}; margin-right: 5px;'></span>{st.session_state.legend_entries[color]}</div>", unsafe_allow_html=True)
