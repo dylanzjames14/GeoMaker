@@ -4,30 +4,21 @@ from folium.plugins import Draw
 from streamlit_folium import st_folium
 from shapely.geometry import shape, mapping
 
-# Check if the page has just been loaded
 if not st.session_state.get('initialized'):
-    # Clear/reset session state variables
     st.session_state.drawn_geometries = []
     st.session_state.drawn_markers = []
     st.session_state.legend_entries = {}
-    # Mark the app as initialized
     st.session_state.initialized = True
 
 st.set_page_config(layout="wide")
-
-# Title
 st.title("MapNow 🗺️")
-
-# Warning: Work in Progress
 st.warning("🚧 Work in Progress 🚧")
 
-# Expander for Instructions and Welcome Message
 with st.expander("Instructions & Welcome Message", expanded=False):
     st.write("""
     Welcome to MapNow! 
     Here, you can outline fields and place markers on the map, then specify details for each.
     """)
-
     st.markdown("### Instructions:")
     st.markdown("""
     1. **Draw a field boundary or place a marker** on the map.
@@ -38,15 +29,7 @@ with st.expander("Instructions & Welcome Message", expanded=False):
     6. To clear all fields and markers and start fresh, click the "Clear all" button.
     """)
 
-# Initialize session state for legend entries if not already present
-if 'legend_entries' not in st.session_state:
-    st.session_state.legend_entries = {}
-
-
-# Initial location
 location = [36.1256, -97.0665]
-
-# Initialize the map
 m = folium.Map(
     location=location,
     zoom_start=11,
@@ -66,10 +49,8 @@ draw_options = {
 
 draw_control = Draw(draw_options=draw_options)
 draw_control.add_to(m)
-
 returned_objects = st_folium(m, width='100%', height=650)
 
-# If there are any returned drawn geometries, add them to the session state
 if returned_objects and 'all_drawings' in returned_objects and returned_objects['all_drawings']:
     for feature in returned_objects['all_drawings']:
         if feature['geometry']['type'] == 'Polygon':
@@ -91,25 +72,18 @@ if returned_objects and 'all_drawings' in returned_objects and returned_objects[
                     'label': ''
                 })
 
-# Button to reset everything
 if st.button("Reset all"):
     st.session_state.drawn_geometries = []
     st.session_state.drawn_markers = []
 
-# Separator
 st.markdown("---")
-
-# New Report Title Section
 st.subheader("Report Title")
 report_title = st.text_input("", value="Enter your report title here")
 
-# Separator
 st.markdown("---")
-
-# Display the Fields
 st.subheader("Fields")
+fields_data = []
 
-# Display the list of drawn geometries below the map
 for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
     if 'geometry' in geo_entry:
         col1, col2, col3, col4, col5 = st.columns(5)
@@ -123,49 +97,67 @@ for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
             geo_entry['farm'] = st.text_input(f"Farm", geo_entry.get('farm', ''), key=f"farm_input_{idx}")
         with col5:
             geo_entry['field'] = st.text_input(f"Field", geo_entry.get('field', ''), key=f"field_input_{idx}")
-        with st.expander("View Details"):
-            s = shape(geo_entry['geometry'])
-            st.write(s)
-            centroid = s.centroid
-            st.write(f"Centroid: {centroid.x}, {centroid.y}")
 
-# Separator
+        field_data = {
+            "geojson": {
+                "type": "Feature",
+                "properties": {},
+                "geometry": geo_entry['geometry']
+            },
+            "color": geo_entry['color'],
+            "labelLocation": f"{shape(geo_entry['geometry']).centroid.y},{shape(geo_entry['geometry']).centroid.x}"
+        }
+        fields_data.append(field_data)
+
 st.markdown("---")
-
-# Display the Map Labels
 st.subheader("Map Labels")
 
-# Display the list of drawn markers below the drawn geometries
 for idx, marker_entry in enumerate(st.session_state.drawn_markers):
     if 'geometry' in marker_entry:
-        col1, col2, col3, col4, col5 = st.columns(5)
+        col1, col2, col3 = st.columns(3)
         with col1:
             st.write(f"Map Label {idx+1}")
         with col2:
             marker_entry['color'] = st.color_picker("Pick a color", marker_entry.get('color', '#000000'), key=f"marker_color_picker_{idx}")
         with col3:
             marker_entry['label'] = st.text_input(f"Label", marker_entry.get('label', ''), key=f"marker_label_input_{idx}")
-        with st.expander("View Coordinates"):
-            st.write(f"Lat: {marker_entry['geometry']['coordinates'][1]}, Lon: {marker_entry['geometry']['coordinates'][0]}")
 
-# Collect all the colors used in geometries and markers
+st.markdown("---")
+st.subheader("Legend")
+
 all_colors = set([geo_entry['color'] for geo_entry in st.session_state.drawn_geometries])
 all_colors.update([marker_entry['color'] for marker_entry in st.session_state.drawn_markers])
 
-# Separator
-st.markdown("---")
-
-# Display the legend at the bottom of the page
-st.subheader("Legend")
-
-# Check and prompt for descriptions of new colors
 for color in all_colors:
     if color not in st.session_state.legend_entries:
-        # Display a colored block with an input next to it
         st.markdown(f"<div style='display: inline-block; margin-right: 10px; vertical-align: middle;'><span style='display: inline-block; width: 25px; height: 25px; background-color: {color}; margin-right: 5px;'></span></div>", unsafe_allow_html=True)
         description = st.text_input(f"Label for color {color}", key=f"legend_description_{color}")
         if description:
             st.session_state.legend_entries[color] = description
     else:
-        # If color already has a description, display it
         st.markdown(f"<div style='display: inline-block; margin-right: 10px;'><span style='display: inline-block; width: 25px; height: 25px; background-color: {color}; margin-right: 5px;'></span>{st.session_state.legend_entries[color]}</div>", unsafe_allow_html=True)
+
+st.markdown("---")
+st.subheader("Generated JSON")
+
+json_data = {
+    "report": {
+        "title": report_title
+    },
+    "map": {
+        "mapDefinition": {
+            "boundingBox": {
+                "topLeft": "40.812776,-74.105974",
+                "bottomRight": "40.512776,-73.805974"
+            },
+            "centroid": f"{location[0]},{location[1]}",
+            "zoomLevel": 12
+        },
+        "fields": fields_data
+    },
+    "legend": {
+        "colors": [{"description": st.session_state.legend_entries[color], "color": color} for color in st.session_state.legend_entries]
+    }
+}
+
+st.json(json_data)
