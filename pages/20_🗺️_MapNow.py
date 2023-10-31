@@ -4,12 +4,14 @@ from folium.plugins import Draw
 from streamlit_folium import st_folium
 from shapely.geometry import shape, mapping
 
-# Only initialize session state if it doesn't exist yet
-if 'drawn_geometries' not in st.session_state:
+# Check if the page has just been loaded
+if not st.session_state.get('initialized'):
+    # Clear/reset session state variables
     st.session_state.drawn_geometries = []
-
-if 'drawn_markers' not in st.session_state:
     st.session_state.drawn_markers = []
+    st.session_state.legend_entries = {}
+    # Mark the app as initialized
+    st.session_state.initialized = True
 
 st.set_page_config(layout="wide")
 
@@ -94,6 +96,16 @@ if st.button("Reset all"):
     st.session_state.drawn_geometries = []
     st.session_state.drawn_markers = []
 
+# Separator
+st.markdown("---")
+
+# New Report Title Section
+st.subheader("Report Title")
+report_title = st.text_input("", value="Enter your report title here")
+
+# Separator
+st.markdown("---")
+
 # Display the Fields
 st.subheader("Fields")
 
@@ -117,6 +129,9 @@ for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
             centroid = s.centroid
             st.write(f"Centroid: {centroid.x}, {centroid.y}")
 
+# Separator
+st.markdown("---")
+
 # Display the Map Labels
 st.subheader("Map Labels")
 
@@ -136,6 +151,9 @@ for idx, marker_entry in enumerate(st.session_state.drawn_markers):
 # Collect all the colors used in geometries and markers
 all_colors = set([geo_entry['color'] for geo_entry in st.session_state.drawn_geometries])
 all_colors.update([marker_entry['color'] for marker_entry in st.session_state.drawn_markers])
+
+# Separator
+st.markdown("---")
 
 # Display the legend at the bottom of the page
 st.subheader("Legend")
