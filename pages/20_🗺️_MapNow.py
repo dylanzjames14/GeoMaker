@@ -24,7 +24,7 @@ with st.expander("Instructions & Welcome Message", expanded=False):
     1. **Draw a field boundary or place a marker** on the map.
     2. Once drawn or placed, the boundary/marker will appear below the map with inputs to specify details.
     3. Use the color picker to choose a color for the field boundary or marker.
-    4. For fields, provide details in the "Grower", "Farm", and "Field" inputs.
+    4. For fields, provide details in the "Grower", "Farm", "Field", "Area", and "STR" inputs.
     5. For markers, provide a label.
     6. To clear all fields and markers and start fresh, click the "Clear all" button.
     """)
@@ -56,12 +56,18 @@ if returned_objects and 'all_drawings' in returned_objects and returned_objects[
         if feature['geometry']['type'] == 'Polygon':
             existing_geometries = [entry['geometry'] for entry in st.session_state.drawn_geometries if 'geometry' in entry]
             if feature['geometry'] not in existing_geometries:
+                s = shape(feature['geometry'])
+                # Convert the area from square degrees to acres (assuming the map uses EPSG:4326 WGS 84)
+                # Note: This is an approximate conversion and might not be accurate for large areas.
+                area_acres = s.area * (10**4) * 247.105
                 st.session_state.drawn_geometries.append({
                     'geometry': feature['geometry'],
                     'color': '#FFFFFF',
                     'grower': '',
                     'farm': '',
-                    'field': ''
+                    'field': '',
+                    'area': f"{area_acres:.2f} acres",
+                    'STR': ''
                 })
         elif feature['geometry']['type'] == 'Point':
             existing_markers = [entry['geometry'] for entry in st.session_state.drawn_markers if 'geometry' in entry]
@@ -86,7 +92,7 @@ fields_data = []
 
 for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
     if 'geometry' in geo_entry:
-        col1, col2, col3, col4, col5 = st.columns(5)
+        col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
         with col1:
             st.write(f"Field {idx+1}")
         with col2:
@@ -97,6 +103,10 @@ for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
             geo_entry['farm'] = st.text_input(f"Farm", geo_entry.get('farm', ''), key=f"farm_input_{idx}")
         with col5:
             geo_entry['field'] = st.text_input(f"Field", geo_entry.get('field', ''), key=f"field_input_{idx}")
+        with col6:
+            geo_entry['area'] = st.text_input(f"Area", geo_entry.get('area', '0 acres'), key=f"area_input_{idx}")
+        with col7:
+            geo_entry['STR'] = st.text_input(f"STR", geo_entry.get('STR', ''), key=f"STR_input_{idx}")
 
         field_data = {
             "geojson": {
@@ -105,6 +115,8 @@ for idx, geo_entry in enumerate(st.session_state.drawn_geometries):
                 "geometry": geo_entry['geometry']
             },
             "color": geo_entry['color'],
+            "area": geo_entry['area'],
+            "STR": geo_entry['STR'],
             "labelLocation": f"{shape(geo_entry['geometry']).centroid.y},{shape(geo_entry['geometry']).centroid.x}"
         }
         fields_data.append(field_data)
@@ -114,7 +126,7 @@ st.subheader("Map Labels")
 
 for idx, marker_entry in enumerate(st.session_state.drawn_markers):
     if 'geometry' in marker_entry:
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
         with col1:
             st.write(f"Map Label {idx+1}")
         with col2:
