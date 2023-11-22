@@ -23,6 +23,10 @@ add_label_key = "add_label"
 reset_top_key = "reset_top"
 reset_bottom_key = "reset_bottom"
 
+# Initialize session state for field areas
+if 'field_total_areas' not in st.session_state:
+    st.session_state.field_total_areas = {}
+
 # Initialize session state for separate counters for fields and labels
 if 'initialized' not in st.session_state:
     st.session_state.initialized = True
@@ -30,6 +34,7 @@ if 'field_id' not in st.session_state:
     st.session_state.field_id = 1
 if 'label_id' not in st.session_state:
     st.session_state.label_id = 1
+
 
 # Initialize session state
 if 'next_id' not in st.session_state:
@@ -43,7 +48,7 @@ if 'legend_entries' not in st.session_state:
 
 
 st.title("MapNow 🗺️")
-st.warning("🚧 Work in Progress 🚧")
+
 st.markdown("""
 Welcome to **MapNow**! This interactive tool allows you to  add fields and markers on a map, customize their details, and generate MapNow report JSON.
 """)
@@ -105,11 +110,14 @@ with col4:
 st.markdown("---")  
 st.subheader("Fields")
 
+fields_data = []  # Initialize the list to hold field data
+
 if st.button("Add Field", key=add_field_key):
     field_key = f'field_{st.session_state.field_id}'
     st.session_state.field_id += 1
+    st.session_state.field_total_areas[field_key] = 0  # Initialize total area for this new field
     new_map = create_map('field', field_key)
-    st.session_state.field_maps[field_key] = {'map': new_map, 'details': {'color': '#FFFFFF', 'area': '0 acres'}}
+    st.session_state.field_maps[field_key] = {'map': new_map, 'details': {'color': '#FFFFFF', 'area': '0 acres', 'geometry': None}}
 
 for key, value in st.session_state.field_maps.items():
     if key.startswith("field_"):
@@ -121,17 +129,33 @@ for key, value in st.session_state.field_maps.items():
             field_name = cols[2].text_input("Field", key=f"field_{key}")
             STR = cols[3].text_input("STR", key=f"STR_{key}")
 
-            # Folium map with st_folium
-            returned_objects = st_folium(value['map'], width=700, height=450)
+            # Folium map with st_folium, using a unique key
+            returned_objects = st_folium(value['map'], width=700, height=450, key=f"map_{key}")
 
+            # Check and recalculate the total area for this field
             if returned_objects and 'all_drawings' in returned_objects and returned_objects['all_drawings']:
+                st.session_state.field_total_areas[key] = 0  # Reset total area
                 for feature in returned_objects['all_drawings']:
                     if feature['geometry']['type'] == 'Polygon':
+                        value['details']['geometry'] = feature['geometry']  # Store geometry
                         s = shape(feature['geometry'])
                         area_acres = s.area * (10**4) * 247.105
-                        value['details']['area'] = f"{area_acres:.2f} acres"
+                        st.session_state.field_total_areas[key] += area_acres  # Accumulate area
 
-            cols[3].write(f"Area: {value['details']['area']}")
+            total_area_for_field = st.session_state.field_total_areas.get(key, 0)
+            cols[3].write(f"Area: {total_area_for_field:.2f} acres")
+
+            field_data = {
+                "geojson": {
+                    "type": "Feature",
+                    "properties": {},
+                    "geometry": value['details']['geometry']
+                },
+                "color": value['details']['color'],
+                "area": f"{total_area_for_field:.2f} acres",
+                "STR": value['details'].get('STR', '')
+            }
+            fields_data.append(field_data)
 
             value['details'].update({
                 "color": color,
@@ -146,7 +170,6 @@ for field_details in st.session_state.field_maps.values():
     unique_colors.add(field_details['details']['color'])
 
 st.session_state.unique_colors = unique_colors
-
 
 # Section for Labels
 st.markdown("---")  
@@ -181,12 +204,7 @@ for color in st.session_state.unique_colors:
     else:
         st.text_input(f"Label for color {color}", value=st.session_state.legend_entries[color], key=f"legend_description_{color}")
 
-
-
 # Generate JSON
-fields_data = [value['details'] for value in st.session_state.field_maps.values()]
-markers_data = [value['details'] for value in st.session_state.marker_maps.values()]
-
 json_data = {
     "report": {
         "title": report_title,
@@ -196,7 +214,7 @@ json_data = {
     },
     "map": {
         "fields": fields_data,
-        "markers": markers_data
+        "markers": [value['details'] for value in st.session_state.marker_maps.values()]
     },
     "legend": {
         "colors": [{"description": st.session_state.legend_entries[color], "color": color} for color in st.session_state.legend_entries]
