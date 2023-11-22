@@ -135,9 +135,10 @@ for key, value in st.session_state.field_maps.items():
             # Check and recalculate the total area for this field
             if returned_objects and 'all_drawings' in returned_objects and returned_objects['all_drawings']:
                 st.session_state.field_total_areas[key] = 0  # Reset total area
+                value['details']['geometry'] = []  # Initialize the list to store multiple geometries
                 for feature in returned_objects['all_drawings']:
                     if feature['geometry']['type'] == 'Polygon':
-                        value['details']['geometry'] = feature['geometry']  # Store geometry
+                        value['details']['geometry'].append(feature['geometry'])  # Store each polygon geometry
                         s = shape(feature['geometry'])
                         area_acres = s.area * (10**4) * 247.105
                         st.session_state.field_total_areas[key] += area_acres  # Accumulate area
@@ -178,7 +179,7 @@ if st.button("Add Label", key=add_label_key):
     label_key = f'label_{st.session_state.label_id}'
     st.session_state.label_id += 1
     new_map = create_map('marker', label_key)
-    st.session_state.marker_maps[label_key] = {'map': new_map, 'details': {'color': '#FFFFFF'}}
+    st.session_state.marker_maps[label_key] = {'map': new_map, 'details': {'color': '#FFFFFF', 'geometry': None}}
 
 # Display each marker map
 for key, value in st.session_state.marker_maps.items():
@@ -187,7 +188,17 @@ for key, value in st.session_state.marker_maps.items():
             cols = st.columns((1, 3))
             color = cols[0].color_picker("Color", value['details']['color'], key=f"color_marker_{key}")
             label = cols[1].text_input("Label", key=f"label_{key}")
-            folium_static(value['map'], width=700, height=450)
+
+            # Use st_folium with a unique key for each marker
+            returned_objects = st_folium(value['map'], width=700, height=450, key=f"map_marker_{key}")
+
+            # Check for drawings on the map
+            if returned_objects is not None:
+                if 'all_drawings' in returned_objects and returned_objects['all_drawings']:
+                    for feature in returned_objects['all_drawings']:
+                        if feature['geometry']['type'] == 'Point':
+                            value['details']['geometry'] = feature['geometry']
+
 
 st.markdown("---")  
 st.subheader("Legend")
@@ -220,6 +231,43 @@ json_data = {
         "colors": [{"description": st.session_state.legend_entries[color], "color": color} for color in st.session_state.legend_entries]
     }
 }
+
+st.markdown("---")
+st.subheader("Map Overview")
+
+# Create a new folium map for displaying all fields and markers
+overview_map = folium.Map(
+    location=[36.1256, -97.0665],  # Central location
+    zoom_start=11,
+    tiles="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+    attr="Google"
+)
+
+# Add fields to the map
+for key, field in st.session_state.field_maps.items():
+    for geometry in field['details'].get('geometry', []):
+        folium.GeoJson(
+            geometry,
+            name=f"Field {key.split('_')[1]}",
+            style_function=lambda x, color=field['details']['color']: {
+                'fillColor': color,
+                'color': color,
+                'weight': 1,
+                'fillOpacity': 0.5
+            }
+        ).add_to(overview_map)
+
+# Add markers to the overview map
+for key, marker in st.session_state.marker_maps.items():
+    if marker['details'].get('geometry'):
+        folium.Marker(
+            location=[marker['details']['geometry']['coordinates'][1], marker['details']['geometry']['coordinates'][0]],
+            icon=folium.Icon(color=marker['details']['color']),
+            popup=folium.Popup(f"{marker['details'].get('label', 'Marker')} ({key.split('_')[1]})")
+        ).add_to(overview_map)
+
+# Display the overview map
+folium_static(overview_map, width=700, height=500)
 
 st.markdown("---")  # Divider
 st.subheader("Generated JSON")
