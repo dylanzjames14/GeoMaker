@@ -6,6 +6,37 @@ from streamlit_folium import folium_static
 from shapely.geometry import shape
 from datetime import date
 import uuid
+from shapely.geometry import MultiPoint
+
+def calculate_centroid(geometry_list):
+    """
+    Calculate the centroid of a list of geometries (polygons).
+    Returns the centroid as a string in 'latitude,longitude' format.
+    """
+    if not geometry_list:
+        return "0,0"  # Default value if list is empty
+
+    centroids = [shape(geometry).centroid for geometry in geometry_list]
+    if centroids:
+        multi_point = MultiPoint(centroids)
+        centroid = multi_point.centroid
+        return f"{centroid.y},{centroid.x}"
+    return "0,0"
+
+# Function to capture map interaction
+def capture_map_interaction(folium_map):
+    """
+    Captures the interaction with the folium map and returns the centroid and zoom level.
+    """
+    # Default values
+    centroid_lat, centroid_lon = 36.1256, -97.0665
+    zoom_level = 11
+
+    # Capture interaction
+    centroid_lat, centroid_lon = folium_map.location
+    zoom_level = folium_map.zoom_start
+
+    return f"{centroid_lat},{centroid_lon}", zoom_level
 
 def reset_session_state():
     st.session_state.field_id = 1
@@ -154,7 +185,8 @@ for key, value in st.session_state.field_maps.items():
                 },
                 "color": value['details']['color'],
                 "area": f"{total_area_for_field:.2f} acres",
-                "STR": value['details'].get('STR', '')
+                "STR": value['details'].get('STR', ''),
+                "labelLocation": calculate_centroid(value['details']['geometry'])
             }
             fields_data.append(field_data)
 
@@ -199,7 +231,6 @@ for key, value in st.session_state.marker_maps.items():
                         if feature['geometry']['type'] == 'Point':
                             value['details']['geometry'] = feature['geometry']
 
-
 st.markdown("---")  
 st.subheader("Legend")
 
@@ -232,13 +263,18 @@ json_data = {
     }
 }
 
+# Section for Map Overview
 st.markdown("---")
-st.subheader("Map Overview")
+st.subheader("Report Map")
+st.write("Adjust the map to set your map definition in the JSON below.")
 
-# Create a new folium map for displaying all fields and markers
+# Initial map settings
+initial_location = [36.1256, -97.0665]
+initial_zoom_level = 11
+
 overview_map = folium.Map(
-    location=[36.1256, -97.0665],  # Central location
-    zoom_start=11,
+    location=initial_location,
+    zoom_start=initial_zoom_level,
     tiles="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
     attr="Google"
 )
@@ -266,9 +302,44 @@ for key, marker in st.session_state.marker_maps.items():
             popup=folium.Popup(f"{marker['details'].get('label', 'Marker')} ({key.split('_')[1]})")
         ).add_to(overview_map)
 
-# Display the overview map
-folium_static(overview_map, width=700, height=500)
+# Display the overview map and capture its interaction state
+map_state = st_folium(overview_map, width=700, height=500)
 
-st.markdown("---")  # Divider
-st.subheader("Generated JSON")
+# Find centroid marker (assuming the user places a marker for the centroid)
+centroid_marker = next((marker for marker in st.session_state.marker_maps.values() 
+                        if marker['details'].get('is_centroid')), None)
+
+if centroid_marker and centroid_marker['details'].get('geometry'):
+    centroid_location = centroid_marker['details']['geometry']['coordinates']
+    map_centroid = f"{centroid_location[1]},{centroid_location[0]}"  # lat, lon
+else:
+    map_centroid = f"{initial_location[0]},{initial_location[1]}"  # Default to initial location
+
+# Extract zoom level from the map's current state
+map_zoom_level = map_state.get("zoom", initial_zoom_level)
+
+# Generate JSON with map definition including the centroid and zoom level
+json_data = {
+    "report": {
+        "title": report_title,
+        "grower": grower,
+        "printed_on": printed_on.isoformat(),
+        "printed_by": printed_by
+    },
+    "map": {
+        "mapDefinition": {
+            "centroid": map_centroid,
+            "zoomLevel": map_zoom_level
+        },
+        "fields": fields_data,
+        "markers": [value['details'] for value in st.session_state.marker_maps.values()]
+    },
+    "legend": {
+        "colors": [{"description": st.session_state.legend_entries[color], "color": color} for color in st.session_state.legend_entries]
+    }
+}
+# Section for Report JSON
+st.markdown("---")
+st.subheader("Report JSON")
+st.write("Copy the JSON below for your request body in the MapNow Report.")
 st.json(json_data)
