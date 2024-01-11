@@ -147,7 +147,7 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             return buffer.read()
 
 st.title("🚜 Make Mock Application Data")
-st.warning("This page is currently a work in progress. Rates are defaulted to a liquid fertilizer rate averaging ~17 gal/ac.")
+st.warning("This page is currently a work in progress. Rates are defaulted to a liquid fertilizer rate averaging ~17 gal/ac. Please notify Dylan of any issues you experience.")
 
 # Create an expander for the instructions
 instructions_expander = st.expander("Click for instructions", expanded=False)
