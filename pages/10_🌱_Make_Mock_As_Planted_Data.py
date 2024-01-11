@@ -146,7 +146,7 @@ def save_geojson_to_shapefile(all_drawings, filename, crop):
             return buffer.read()
 
 st.title("🌾 Make Mock As-Planted Data")
-st.warning("This page is a work in progress. Highest liklihood of success will come with fields in the United States or northern hemisphere. Please notify Dylan of any issues you experience.")
+st.warning("⚠️ This page is a work in progress. Highest liklihood of success will come with fields in the United States or northern hemisphere. Please notify Dylan of any issues you experience.")
 
 instructions_expander = st.expander("Click for instructions", expanded=False)
 with instructions_expander:
