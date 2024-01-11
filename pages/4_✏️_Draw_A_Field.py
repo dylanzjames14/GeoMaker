@@ -83,7 +83,7 @@ with instructions_expander:
     2. **Draw a field boundary** using the map tools.
     3. When finished, click the appropriate button to **save your drawn field boundary**.
 
-    💡 **Tip:** If you click '**Save Field**', you can utilize the field boundary in the **📍 Create Sampling Points** application.
+    💡 **Tip:** If you click '**Save Field**', you can utilize the saved boundary for making sampling points, yield, and as-applied data.
     """, unsafe_allow_html=True)
 
 zoom_start = 11
