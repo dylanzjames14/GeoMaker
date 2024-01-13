@@ -8,122 +8,108 @@ from zipfile import ZipFile
 from io import BytesIO
 import fiona
 import os
-from shapely.geometry import shape as shapely_shape, mapping
+from shapely.geometry import shape, mapping
 import simplekml
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
 
+# Set page configuration
 st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 
-def get_polygon_bounds(features):
-    min_lat, min_lon, max_lat, max_lon = None, None, None, None
+def calculate_polygon_bounds(features):
+    minimum_latitude, minimum_longitude, maximum_latitude, maximum_longitude = None, None, None, None
     for feature in features:
         if feature['geometry']['type'] == 'Polygon':
-            polygon = shapely_shape(feature['geometry'])
-            if min_lat is None or polygon.bounds[1] < min_lat:
-                min_lat = polygon.bounds[1]
-            if min_lon is None or polygon.bounds[0] < min_lon:
-                min_lon = polygon.bounds[0]
-            if max_lat is None or polygon.bounds[3] > max_lat:
-                max_lat = polygon.bounds[3]
-            if max_lon is None or polygon.bounds[2] > max_lon:
-                max_lon = polygon.bounds[2]
-    return min_lon, min_lat, max_lon, max_lat
+            polygon = shape(feature['geometry'])
+            if minimum_latitude is None or polygon.bounds[1] < minimum_latitude:
+                minimum_latitude = polygon.bounds[1]
+            if minimum_longitude is None or polygon.bounds[0] < minimum_longitude:
+                minimum_longitude = polygon.bounds[0]
+            if maximum_latitude is None or polygon.bounds[3] > maximum_latitude:
+                maximum_latitude = polygon.bounds[3]
+            if maximum_longitude is None or polygon.bounds[2] > maximum_longitude:
+                maximum_longitude = polygon.bounds[2]
+    return minimum_longitude, minimum_latitude, maximum_longitude, maximum_latitude
 
-def save_geojson_to_kml(all_drawings, filename):
-    kml = simplekml.Kml()
-
-    for idx, feature in enumerate(all_drawings):
+def convert_geojson_to_kml(drawn_features, file_name):
+    kml_file = simplekml.Kml()
+    for index, feature in enumerate(drawn_features):
         if feature['geometry']['type'] == 'Polygon':
-            polygon = shapely_shape(feature['geometry'])
-            kml.newpolygon(name=f"Polygon {idx}", outerboundaryis=list(polygon.exterior.coords))
+            polygon = shape(feature['geometry'])
+            kml_file.newpolygon(name=f"Polygon {index}", outerboundaryis=list(polygon.exterior.coords))
+    return kml_file.kml()
 
-    kml_str = kml.kml()
-    return kml_str
-
-
-def save_geojson_to_shapefile(all_drawings, filename):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Define schema
-        schema = {
+def convert_geojson_to_shapefile(drawn_features, file_name):
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        schema_definition = {
             'geometry': 'Polygon',
             'properties': [('Name', 'str')]
         }
-
-        # Open a Fiona object
-        shapefile_filepath = os.path.join(tmpdir, f"{filename}.shp")
-        with fiona.open(shapefile_filepath, mode='w', driver='ESRI Shapefile', schema=schema, crs="EPSG:4326") as shp_file:
-            for idx, feature in enumerate(all_drawings):
+        shapefile_path = os.path.join(temporary_directory, f"{file_name}.shp")
+        with fiona.open(shapefile_path, mode='w', driver='ESRI Shapefile', schema=schema_definition, crs="EPSG:4326") as shapefile:
+            for index, feature in enumerate(drawn_features):
                 if feature['geometry']['type'] == 'Polygon':
-                    polygon = shapely_shape(feature['geometry'])
-                    shape = {
+                    polygon = shape(feature['geometry'])
+                    shapefile.write({
                         'geometry': mapping(polygon),
-                        'properties': {'Name': f"Polygon {idx}"}
-                    }
-                    shp_file.write(shape)
-
-        # Create a zip file containing the shapefile components
+                        'properties': {'Name': f"Polygon {index}"}
+                    })
         with BytesIO() as buffer:
             with ZipFile(buffer, "w") as zip_file:
                 for extension in ["shp", "shx", "dbf", "prj"]:
-                    zip_file.write(os.path.join(tmpdir, f"{filename}.{extension}"), f"{filename}.{extension}")
+                    zip_file.write(os.path.join(temporary_directory, f"{file_name}.{extension}"), f"{file_name}.{extension}")
             buffer.seek(0)
             return buffer.read()
 
-
+# Application title
 st.title("✏️ Draw a Field")
 
-# Create an expander for the instructions
-instructions_expander = st.expander("Click for instructions", expanded=False)
+# Instructions expander
+instructions_expander = st.expander("Instructions", expanded=False)
 with instructions_expander:
     st.markdown("""
     **Objective:** Draw a field boundary and save its boundary file.
+    1. Navigate to your field on the map.
+    2. Draw a field boundary using the map tools.
+    3. Click the appropriate button to save your drawn field boundary.
+    Tip: Utilize the field boundary in the Create Sampling Points application.
+    """)
 
-    1. **Navigate** to your field on the map.
-    2. **Draw a field boundary** using the map tools.
-    3. When finished, click the appropriate button to **save your drawn field boundary**.
+# Action buttons in a horizontal layout
+button_cols = st.columns(5)  # Create five columns for the buttons
+with button_cols[0]:
+    button_save_shapefile = st.button("Save SHP")
+with button_cols[1]:
+    button_save_kml = st.button("Save KML")
+with button_cols[2]:
+    button_save_geojson = st.button("Save GeoJSON")
+with button_cols[3]:
+    button_save_for_sampling = st.button("Save Field")
+with button_cols[4]:
+    button_remove_field = st.button("Remove Field")
 
-    💡 **Tip:** If you click '**Save Field**', you can utilize the saved boundary for making sampling points, yield, and as-applied data.
-    """, unsafe_allow_html=True)
+# Default map settings
+default_zoom = 14
+default_location = [36.1256, -97.0665]
 
-zoom_start = 11
-
-geolocator = Nominatim(user_agent="myGeocoder")
-search_location = st.text_input("Search for a location:")
-
-# Initialize location to default or based on 'saved_geography' in session state
-location = [36.1256, -97.0665]
+# Update location based on saved geography
 if 'saved_geography' in st.session_state:
-    bounds = get_polygon_bounds(st.session_state.saved_geography)
+    bounds = calculate_polygon_bounds(st.session_state.saved_geography)
     if bounds:
-        min_lon, min_lat, max_lon, max_lat = bounds
-        center_lat = (min_lat + max_lat) / 2
-        center_lon = (min_lon + max_lon) / 2
-        location = [center_lat, center_lon]
-        zoom_start = 15
+        minimum_longitude, minimum_latitude, maximum_longitude, maximum_latitude = bounds
+        center_latitude = (minimum_latitude + maximum_latitude) / 2
+        center_longitude = (minimum_longitude + maximum_longitude) / 2
+        default_location = [center_latitude, center_longitude]
+        default_zoom = 15
 
-# Override location and zoom if a search location was provided
-if search_location:
-    try:
-        geo_location = geolocator.geocode(search_location)
-        if geo_location:
-            st.write(f"Latitude: {geo_location.latitude}, Longitude: {geo_location.longitude}")
-            location = [geo_location.latitude, geo_location.longitude]
-            zoom_start = 15
-        else:
-            st.warning("Location not found. Please try another search query.")
-    except GeocoderTimedOut:
-        st.warning("Geocoding service timed out. Please try again.")
-
-# Initialize the map
-m = folium.Map(
-    location=location,
-    zoom_start=zoom_start,
+# Initialize and configure the map
+map_object = folium.Map(
+    location=default_location,
+    zoom_start=default_zoom,
     tiles="https://mt1.google.com/vt/lyrs=y@18&x={x}&y={y}&z={z}",
     attr="Google"
 )
 
-draw_options = {
+# Map drawing options
+drawing_options = {
     "position": "topleft",
     "polyline": False,
     "circle": False,
@@ -133,62 +119,49 @@ draw_options = {
     "marker": False,
 }
 
-draw_control = Draw(export=False, draw_options=draw_options)
-draw_control.add_to(m)
+# Add drawing control to the map
+drawing_control = Draw(export=False, draw_options=drawing_options)
+drawing_control.add_to(map_object)
 
-# Add the saved polygons to the map
+# Display saved polygons on the map
 if 'saved_geography' in st.session_state:
     for feature in st.session_state.saved_geography:
         if feature['geometry']['type'] == 'Polygon':
-            polygon = folium.GeoJson(
+            folium.GeoJson(
                 data=feature,
                 style_function=lambda x: {"fillColor": "blue", "color": "blue", "weight": 1, "fillOpacity": 0.3}
-            )
-            polygon.add_to(m)
+            ).add_to(map_object)
 
-# Create two columns
-col1, col2 = st.columns([3, 1])
+# Map display - full width
+returned_objects = st_folium(map_object, width='100%', height=650, returned_objects=["all_drawings"])
 
-# Place the map in the first column
-with col1:
-    returned_objects = st_folium(m, width='100%', height=650, returned_objects=["all_drawings"])
-
-# Place the buttons in the second column
-with col2:
-    save_shapefile_button = st.button("Save to Shapefile")
-    save_kml_button = st.button("Save KML")
-    save_geojson_button = st.button("Save GEOJSON")
-    save_for_sampling_button = st.button("Save Field")
-    remove_field_button = st.button("Remove field", key="remove_field_button")
-
-# 'Remove field' button action moved outside
-if remove_field_button:
+# Remove field action
+if button_remove_field:
     if 'saved_geography' in st.session_state:
         del st.session_state.saved_geography
         st.experimental_rerun()
 
-if save_shapefile_button or save_kml_button or save_geojson_button or save_for_sampling_button:
-    all_drawings = []
+# Save actions
+if any([button_save_shapefile, button_save_kml, button_save_geojson, button_save_for_sampling]):
+    all_drawn_features = []
     if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and returned_objects['all_drawings']:
-        all_drawings = returned_objects['all_drawings']
+        all_drawn_features = returned_objects['all_drawings']
     if 'saved_geography' in st.session_state:
-        all_drawings.extend(st.session_state.saved_geography)
+        all_drawn_features.extend(st.session_state.saved_geography)
 
-    if len(all_drawings) > 0:
-        if save_shapefile_button:
-            shapefile_data = save_geojson_to_shapefile(all_drawings, "DrawnPolygons")
-            col1.download_button("Download Shapefile", shapefile_data, "Drawn_Polygons_Shapefile.zip", "application/zip")
-
-        if save_kml_button:
-            kml_data = save_geojson_to_kml(all_drawings, "DrawnPolygons")
-            col1.download_button("Download KML", kml_data, "Drawn_Polygons.kml", "application/vnd.google-earth.kml+xml")
-
-        if save_geojson_button:
-            geojson_data = json.dumps({"type": "FeatureCollection", "features": all_drawings})
-            col1.download_button("Download GEOJSON", geojson_data, "Drawn_Polygons.geojson", "application/geo+json")
-
-        if save_for_sampling_button:
-            st.session_state.saved_geography = all_drawings
+    if all_drawn_features:
+        if button_save_shapefile:
+            shapefile_content = convert_geojson_to_shapefile(all_drawn_features, "DrawnPolygons")
+            column_1.download_button("Download Shapefile", shapefile_content, "Drawn_Polygons_Shapefile.zip", "application/zip")
+        if button_save_kml:
+            kml_content = convert_geojson_to_kml(all_drawn_features, "DrawnPolygons")
+            column_1.download_button("Download KML", kml_content, "Drawn_Polygons.kml", "application/vnd.google-earth.kml+xml")
+        if button_save_geojson:
+            geojson_content
+            geojson_content = json.dumps({"type": "FeatureCollection", "features": all_drawn_features})
+            column_1.download_button("Download GEOJSON", geojson_content, "Drawn_Polygons.geojson", "application/geo+json")
+        if button_save_for_sampling:
+            st.session_state.saved_geography = all_drawn_features
             st.success("Geography saved for use on the other pages!")
     else:
         st.warning("No polygons found. Please draw polygons on the map.")
