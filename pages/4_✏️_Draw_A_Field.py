@@ -63,7 +63,7 @@ def convert_geojson_to_shapefile(drawn_features, file_name):
 st.title("✏️ Draw a Field")
 
 # Instructions expander
-instructions_expander = st.expander("Instructions", expanded=False)
+instructions_expander = st.expander("Click for instructions", expanded=False)
 with instructions_expander:
     st.markdown("""
     **Objective:** Draw a field boundary and save its boundary file.
