@@ -15,7 +15,7 @@ Welcome to the Modus Soil Test Converter! Transform your soil test data into the
 """)
 
 # Warning message
-st.warning("⚠️ This tool is still under development. Please verify results before use.")
+st.warning("⚠️ Please verify results before use.")
 
 # Instructions
 with st.expander("Click for instructions", expanded=False):
