@@ -87,7 +87,6 @@ default_checkbox_states = {
     "CaCO3": False,
     "ENR": False,
     "EC": False,
-    "Moisture": False,
     "Humic Matter": False,
 }
 
@@ -163,7 +162,6 @@ default_min_max_values = {
     "CaCO3": (1, 2),
     "ENR": (1,100),
     "EC": (.2,2),
-    "Moisture": (1,20),
     "P(B1)": (1,60),
     "P(B2)": (1,60),
     "P(Cald)": (1,60),
@@ -233,7 +231,6 @@ default_decimal_precisions = {
     "CaCO3": 0,
     "ENR": 0,
     "EC": 1,
-    "Moisture": 1,
     "P(B1)": 0,
     "P(B2)": 0,
     "P(Cald)": 0,
@@ -304,7 +301,6 @@ default_units = {
     "CaCO3": ["%"],
     "ENR": ["lbs/ac"],
     "EC": ["mmhos/cm"],
-    "Moisture": ["%"],
     "P(B1)": ["ppm", "lbs/ac"],
     "P(B2)": ["ppm", "lbs/ac"],
     "P(Cald)": ["ppm", "lbs/ac"],
@@ -371,7 +367,7 @@ with st.expander("Specify analysis and sample ranges", expanded=False):
     min_sample_id, max_sample_id = st.slider("Set Number Range:", 1, 500, (1, 35))
     
     # Create two columns for the buttons
-    button_columns = st.columns(15)
+    button_columns = st.columns(2)
 
     # Add buttons for selecting/deselecting all checkboxes
     with button_columns[0]:
