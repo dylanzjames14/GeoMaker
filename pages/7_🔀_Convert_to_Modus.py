@@ -18,7 +18,7 @@ Welcome to the Modus Soil Test Converter! Transform your soil test data into the
 st.warning("⚠️ This tool is still under development. Please verify results before use.")
 
 # Instructions
-with st.expander("How to Use:", expanded=False):
+with st.expander("Click for instructions", expanded=False):
     st.write("""
     1. **Upload** your soil test data file.
     2. **Match** the columns in your file to the Modus soil test analysis elements and units.
