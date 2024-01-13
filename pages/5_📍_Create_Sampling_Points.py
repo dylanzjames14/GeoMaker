@@ -103,6 +103,13 @@ with instructions_expander:
                 
             st.session_state.boundary_updated = True
 
+# Create a horizontal layout for the buttons
+button_col1, button_col2 = st.columns(2)
+with button_col1:
+    save_to_shapefile_button = st.button("Save points to Shapefile")
+with button_col2:
+    remove_field_button = st.button("Remove field")
+
 # Calculate the bounding box of the saved polygons
 def get_polygon_bounds(polygon_features):
     polygons = [shapely_shape(feature['geometry']) for feature in polygon_features if feature['geometry']['type'] == 'Polygon']
@@ -201,14 +208,6 @@ if st.session_state.uploaded_boundary and st.session_state.boundary_updated:
 # Display the map without columns
 returned_objects = st_folium(m, width='100%', height=700, returned_objects=["all_drawings"])
 
-# Create an empty placeholder for the buttons
-col1, col2 = st.columns(2)
-buttons_placeholder1 = col1.empty()
-buttons_placeholder2 = col2.empty()
-
-# Show the buttons below the map
-save_to_shapefile_button = buttons_placeholder1.button("Save to Shapefile", key="save_to_shapefile_button")
-remove_field_button = buttons_placeholder2.button("Remove field", key="remove_field_button")
 
 if save_to_shapefile_button:
     if returned_objects and isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
