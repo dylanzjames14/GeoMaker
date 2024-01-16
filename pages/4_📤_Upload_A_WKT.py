@@ -65,7 +65,7 @@ map_object = folium.Map(
 )
 
 # WKT Input Section within an Expander
-with st.expander("Input your WKT string here:"):
+with st.expander("WKT Input:"):
     st.code("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     wkt_input = st.text_area("Paste your WKT here:")
     submit_wkt = st.button("Load to Map")
