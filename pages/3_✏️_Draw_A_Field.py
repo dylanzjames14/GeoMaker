@@ -181,18 +181,19 @@ if any([button_save_shapefile, button_save_kml, button_save_geojson, button_save
             shapefile_content = convert_geojson_to_shapefile(all_drawn_features, "DrawnPolygons")
             with open("Drawn_Polygons_Shapefile.zip", "wb") as f:
                 f.write(shapefile_content)
-            st.download_button("Download Shapefile", "Drawn_Polygons_Shapefile.zip")
+            st.download_button(label="Download Shapefile", data=shapefile_content, file_name="Drawn_Polygons_Shapefile.zip", mime="application/zip")
 
         # Save KML
         if button_save_kml:
             kml_content = convert_geojson_to_kml(all_drawn_features, "DrawnPolygons")
             with open("Drawn_Polygons.kml", "w") as f:
                 f.write(kml_content)
-            st.download_button("Download KML", "Drawn_Polygons.kml")
+            st.download_button(label="Download KML", data=kml_content, file_name="Drawn_Polygons.kml", mime="application/vnd.google-earth.kml+xml")
 
         # Save GeoJSON
         if button_save_geojson:
             geojson_content = json.dumps({"type": "FeatureCollection", "features": all_drawn_features})
             with open("Drawn_Polygons.geojson", "w") as f:
                 f.write(geojson_content)
-            st.download_button("Download GeoJSON", "Drawn_Polygons.geojson")
+            st.download_button(label="Download GeoJSON", data=geojson_content, file_name="Drawn_Polygons.geojson", mime="application/geo+json")
+
