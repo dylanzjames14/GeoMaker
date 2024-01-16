@@ -1,6 +1,7 @@
 import folium
 import streamlit as st
 import json
+import functools
 import tempfile
 from folium.plugins import Draw
 from streamlit_folium import st_folium
@@ -10,6 +11,8 @@ import fiona
 import os
 from shapely.geometry import shape, mapping
 import simplekml
+from shapely.geometry import shape, mapping
+from shapely.wkt import loads as load_wkt
 
 # Set page configuration
 st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
@@ -59,6 +62,16 @@ def convert_geojson_to_shapefile(drawn_features, file_name):
             buffer.seek(0)
             return buffer.read()
 
+# Function to zoom to the polygon
+def zoom_to_polygon(map_obj, polygon_shape):
+    min_lon, min_lat, max_lon, max_lat = polygon_shape.bounds
+    map_obj.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
+
+# Initialize and configure the map
+default_zoom = 14
+default_location = [36.1256, -97.0665]
+map_object = folium.Map(location=default_location, zoom_start=default_zoom)
+
 # Application title
 st.title("✏️ Draw a Field")
 
@@ -72,23 +85,6 @@ with instructions_expander:
     3. Click the appropriate button to save your drawn field boundary.
     Tip: Utilize the field boundary in the Create Sampling Points application.
     """)
-
-# Action buttons in a horizontal layout
-button_cols = st.columns(5)  # Create five columns for the buttons
-with button_cols[0]:
-    button_save_shapefile = st.button("Save SHP")
-with button_cols[1]:
-    button_save_kml = st.button("Save KML")
-with button_cols[2]:
-    button_save_geojson = st.button("Save GeoJSON")
-with button_cols[3]:
-    button_save_for_sampling = st.button("Save Field")
-with button_cols[4]:
-    button_remove_field = st.button("Remove Field")
-
-# Default map settings
-default_zoom = 14
-default_location = [36.1256, -97.0665]
 
 # Update location based on saved geography
 if 'saved_geography' in st.session_state:
@@ -107,6 +103,21 @@ map_object = folium.Map(
     tiles="https://mt1.google.com/vt/lyrs=y@18&x={x}&y={y}&z={z}",
     attr="Google"
 )
+
+
+# Action buttons in a horizontal layout
+button_cols = st.columns(5)  # Create five columns for the buttons
+with button_cols[0]:
+    button_save_for_sampling = st.button("Save Boundary")
+with button_cols[1]:
+    button_remove_field = st.button("Remove Boundary")
+with button_cols[2]:
+    button_save_shapefile = st.button("Save SHP")
+with button_cols[3]:
+    button_save_kml = st.button("Save KML")
+with button_cols[4]:
+    button_save_geojson = st.button("Save GeoJSON")
+
 
 # Map drawing options
 drawing_options = {
@@ -150,18 +161,38 @@ if any([button_save_shapefile, button_save_kml, button_save_geojson, button_save
         all_drawn_features.extend(st.session_state.saved_geography)
 
     if all_drawn_features:
+        # Calculate bounds for all features and zoom the map
+        all_shapes = [shape(feature['geometry']) for feature in all_drawn_features]
+        combined_bounds = functools.reduce(
+            lambda x, y: (
+                min(x[0], y.bounds[0]), min(x[1], y.bounds[1]),
+                max(x[2], y.bounds[2]), max(x[3], y.bounds[3])
+            ),
+            all_shapes,
+            (float('inf'), float('inf'), float('-inf'), float('-inf'))
+        )
+        map_object.fit_bounds([
+            [combined_bounds[1], combined_bounds[0]],
+            [combined_bounds[3], combined_bounds[2]]
+        ])
+
+        # Save Shapefile
         if button_save_shapefile:
             shapefile_content = convert_geojson_to_shapefile(all_drawn_features, "DrawnPolygons")
-            column_1.download_button("Download Shapefile", shapefile_content, "Drawn_Polygons_Shapefile.zip", "application/zip")
+            with open("Drawn_Polygons_Shapefile.zip", "wb") as f:
+                f.write(shapefile_content)
+            st.download_button("Download Shapefile", "Drawn_Polygons_Shapefile.zip")
+
+        # Save KML
         if button_save_kml:
             kml_content = convert_geojson_to_kml(all_drawn_features, "DrawnPolygons")
-            column_1.download_button("Download KML", kml_content, "Drawn_Polygons.kml", "application/vnd.google-earth.kml+xml")
+            with open("Drawn_Polygons.kml", "w") as f:
+                f.write(kml_content)
+            st.download_button("Download KML", "Drawn_Polygons.kml")
+
+        # Save GeoJSON
         if button_save_geojson:
-            geojson_content
             geojson_content = json.dumps({"type": "FeatureCollection", "features": all_drawn_features})
-            column_1.download_button("Download GEOJSON", geojson_content, "Drawn_Polygons.geojson", "application/geo+json")
-        if button_save_for_sampling:
-            st.session_state.saved_geography = all_drawn_features
-            st.success("Geography saved for use on the other pages!")
-    else:
-        st.warning("No polygons found. Please draw polygons on the map.")
+            with open("Drawn_Polygons.geojson", "w") as f:
+                f.write(geojson_content)
+            st.download_button("Download GeoJSON", "Drawn_Polygons.geojson")
