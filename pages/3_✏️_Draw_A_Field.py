@@ -157,6 +157,10 @@ if any([button_save_shapefile, button_save_kml, button_save_geojson, button_save
     all_drawn_features = []
     if isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and returned_objects['all_drawings']:
         all_drawn_features = returned_objects['all_drawings']
+        
+        # Save the drawn features to session storage
+        st.session_state.saved_geography = all_drawn_features  # <-- Add this line
+
     if 'saved_geography' in st.session_state:
         all_drawn_features.extend(st.session_state.saved_geography)
 
