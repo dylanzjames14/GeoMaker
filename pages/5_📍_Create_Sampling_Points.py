@@ -23,6 +23,8 @@ if 'boundary_updated' not in st.session_state:
 
 st.set_page_config(page_title="Geomaker", page_icon="🌍", layout="wide")
 
+buttons_placeholder2 = st.empty()
+
 def kml_to_geojson(kml_file):
     with kml_file as f:
         kml_str = f.read()
@@ -209,12 +211,16 @@ if st.session_state.uploaded_boundary and st.session_state.boundary_updated:
 returned_objects = st_folium(m, width='100%', height=700, returned_objects=["all_drawings"])
 
 
+# Define the placeholder for the download button
+buttons_placeholder1 = st.empty()
+
 if save_to_shapefile_button:
     if returned_objects and isinstance(returned_objects, dict) and 'all_drawings' in returned_objects and len(returned_objects['all_drawings']) > 0:
         shapefile_data = save_geojson_to_shapefile(returned_objects['all_drawings'], "SamplePoints")
         buttons_placeholder1.download_button("Download Shapefile", shapefile_data, "GeoMaker_Point_Shapefile.zip", "application/zip")
     else:
         st.warning("No markers found. Please add markers to the map.")
+
 
 if remove_field_button:
     if 'saved_geography' in st.session_state:
