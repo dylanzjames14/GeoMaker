@@ -166,7 +166,7 @@ def get_field_details(access_token, sync_id, field_id):
 
 # Main function
 def main():
-    st.title("Field Viewer")
+    st.title("Field Viewer 🌾👀")
     st.write("This application allows you to view growers, farms, and fields data from the AgX Platform.")
 
     # Initialize session state variables
@@ -247,11 +247,15 @@ def main():
 
         if st.session_state.get('fields_df') is not None and not st.session_state['fields_df'].empty:
             st.header(f"Fields for Grower: {st.session_state['grower_selected']}")
+
             # Create a geopandas GeoDataFrame
             import geopandas as gpd
             from shapely import wkt
             from shapely.geometry import mapping
             import folium
+            import tempfile
+            import zipfile
+            import os
 
             fields_df = st.session_state['fields_df']
             # Explode the 'BoundaryWKTs' column into separate rows
@@ -262,8 +266,6 @@ def main():
             fields_df = fields_df.dropna(subset=['BoundaryWKT'])
 
             # Parse the WKT geometries with error handling
-            from shapely.errors import WKTReadingError
-
             def parse_wkt_safe(wkt_str):
                 try:
                     geom = wkt.loads(wkt_str)
@@ -274,57 +276,139 @@ def main():
 
             fields_df['geometry'] = fields_df['BoundaryWKT'].apply(parse_wkt_safe)
             fields_df = fields_df.dropna(subset=['geometry'])
-            
+
             if not fields_df.empty:
                 gdf = gpd.GeoDataFrame(fields_df, geometry='geometry', crs='EPSG:4326')
 
-                # Display the table first
-                st.header("Fields Details")
-                st.dataframe(gdf[['Name', 'Measure', 'FarmName', 'BoundaryWKT']])
+                # Expander for Fields Details
+                with st.expander("Fields Details"):
+                    st.dataframe(gdf[['Name', 'Measure', 'FarmName', 'BoundaryWKT']])
 
-                # Now build the map
-                if gdf.geometry.unary_union.is_empty:
-                    st.error("No valid geometries to display on the map.")
-                else:
-                    centroid = gdf.geometry.unary_union.centroid
-                    m = folium.Map(location=[centroid.y, centroid.x], zoom_start=12)
+                # Now build the Grower Map inside an expander
+                with st.expander("Grower Map"):
+                    if gdf.geometry.unary_union.is_empty:
+                        st.error("No valid geometries to display on the map.")
+                    else:
+                        centroid = gdf.geometry.unary_union.centroid
+                        m = folium.Map(location=[centroid.y, centroid.x], zoom_start=12)
 
-                    # Add polygons to the map
-                    for idx, row in gdf.iterrows():
-                        geom = row['geometry']
-                        field_name = row['Name']
-                        farm_name = row['FarmName']
-                        measure = row['Measure']
+                        # Add polygons to the map
+                        for idx, row in gdf.iterrows():
+                            geom = row['geometry']
+                            field_name = row['Name']
+                            farm_name = row['FarmName']
+                            measure = row['Measure']
+                            folium.GeoJson(
+                                data=mapping(geom),
+                                name=field_name,
+                                style_function=lambda x: {
+                                    'fillColor': 'blue',
+                                    'color': 'blue',
+                                    'weight': 1,
+                                    'fillOpacity': 0.5,
+                                },
+                                tooltip=folium.Tooltip(f"Name: {field_name}<br>Farm: {farm_name}<br>Measure: {measure}")
+                            ).add_to(m)
+
+                        # Extract min and max for x and y from total_bounds
+                        minx, miny, maxx, maxy = gdf.total_bounds  # minx = min_longitude, miny = min_latitude
+
+                        # Create bounds in the format [[min_latitude, min_longitude], [max_latitude, max_longitude]]
+                        bounds = [[miny, minx], [maxy, maxx]]
+
+                        # Apply fit_bounds with the correct bounds
+                        m.fit_bounds(bounds)
+
+                        # Add layer control
+                        folium.LayerControl().add_to(m)
+
+                        # Display the map using st.components.v1.html
+                        map_html = m._repr_html_()
+                        map_height = 600  # Adjust as needed
+                        html(map_html, width=1000, height=map_height)
+
+                        # Export Shapefile button
+                        if st.button("Download Grower Shapefile"):
+                            with tempfile.TemporaryDirectory() as tmpdir:
+                                # Write the shapefile to the temporary directory
+                                shapefile_path = os.path.join(tmpdir, "grower_shapefile.shp")
+                                gdf.to_file(shapefile_path, driver='ESRI Shapefile')
+
+                                # Create a zip file of the shapefile
+                                zip_path = os.path.join(tmpdir, "grower_shapefile.zip")
+                                with zipfile.ZipFile(zip_path, 'w') as zipf:
+                                    for filename in os.listdir(tmpdir):
+                                        if filename.startswith("grower_shapefile"):
+                                            file_path = os.path.join(tmpdir, filename)
+                                            zipf.write(file_path, arcname=filename)
+                                # Read the zip file into memory
+                                with open(zip_path, 'rb') as f:
+                                    zip_data = f.read()
+
+                                st.download_button(
+                                    label="Download Grower Shapefile",
+                                    data=zip_data,
+                                    file_name="grower_shapefile.zip",
+                                    mime="application/zip"
+                                )
+
+                # Individual expanders for each field
+                for idx, row in gdf.iterrows():
+                    field_name = row['Name']
+                    with st.expander(field_name):
+                        # Create a map centered on the field
+                        field_geom = row['geometry']
+                        field_centroid = field_geom.centroid
+                        field_map = folium.Map(location=[field_centroid.y, field_centroid.x], zoom_start=14)
                         folium.GeoJson(
-                            data=mapping(geom),
+                            data=mapping(field_geom),
                             name=field_name,
                             style_function=lambda x: {
-                                'fillColor': 'blue',
-                                'color': 'blue',
+                                'fillColor': 'green',
+                                'color': 'green',
                                 'weight': 1,
                                 'fillOpacity': 0.5,
                             },
-                            tooltip=folium.Tooltip(f"Name: {field_name}<br>Farm: {farm_name}<br>Measure: {measure}")
-                        ).add_to(m)
+                            tooltip=field_name
+                        ).add_to(field_map)
 
-                    # Extract min and max for x and y from total_bounds
-                    minx, miny, maxx, maxy = gdf.total_bounds  # minx = min_longitude, miny = min_latitude
+                        # Fit map to field bounds
+                        field_bounds = field_geom.bounds  # (minx, miny, maxx, maxy)
+                        bounds = [[field_bounds[1], field_bounds[0]], [field_bounds[3], field_bounds[2]]]
+                        field_map.fit_bounds(bounds)
 
-                    # Create bounds in the format [[min_latitude, min_longitude], [max_latitude, max_longitude]]
-                    bounds = [[miny, minx], [maxy, maxx]]
+                        # Display the map
+                        field_map_html = field_map._repr_html_()
+                        html(field_map_html, width=800, height=400)
 
-                    # Apply fit_bounds with the correct bounds
-                    m.fit_bounds(bounds)
+                        # Export Shapefile button
+                        if st.button(f"Download Shapefile for {field_name}", key=f"download_button_{idx}"):
+                            with tempfile.TemporaryDirectory() as tmpdir:
+                                # Write the shapefile to the temporary directory
+                                shapefile_gdf = gpd.GeoDataFrame([row], geometry='geometry', crs='EPSG:4326')
+                                shapefile_filename = f"{field_name.replace(' ', '_')}.shp"
+                                shapefile_path = os.path.join(tmpdir, shapefile_filename)
+                                shapefile_gdf.to_file(shapefile_path, driver='ESRI Shapefile')
 
-                    # Add layer control
-                    folium.LayerControl().add_to(m)
+                                # Create a zip file of the shapefile
+                                zip_filename = f"{field_name.replace(' ', '_')}.zip"
+                                zip_path = os.path.join(tmpdir, zip_filename)
+                                with zipfile.ZipFile(zip_path, 'w') as zipf:
+                                    for filename in os.listdir(tmpdir):
+                                        if filename.startswith(field_name.replace(' ', '_')):
+                                            file_path = os.path.join(tmpdir, filename)
+                                            zipf.write(file_path, arcname=filename)
+                                # Read the zip file into memory
+                                with open(zip_path, 'rb') as f:
+                                    zip_data = f.read()
 
-                    # Display the map using st.components.v1.html
-                    map_html = m._repr_html_()
-                    map_height = 600  # Adjust as needed
-                    st.header("Field Boundaries Map")
-                    html(map_html, width=1000, height=map_height)
-
+                                st.download_button(
+                                    label="Download Shapefile",
+                                    data=zip_data,
+                                    file_name=zip_filename,
+                                    mime="application/zip",
+                                    key=f"download_shapefile_{idx}"
+                                )
             else:
                 st.error("No valid field geometries to display.")
         else:
