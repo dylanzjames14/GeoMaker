@@ -20,7 +20,7 @@ def get_access_token(client_id, client_secret, token_url, scope):
         access_token = response.json().get("access_token")
         return access_token
     else:
-        st.error(f"Failed to retrieve access token: {response.status_code}")
+        st.toast(f"Failed to retrieve access token: {response.status_code}", icon="⚠️")
         return None
 
 # Step 2: Retrieve growers using access token and syncId
@@ -43,10 +43,10 @@ def get_growers(access_token, sync_id):
             ]
             return pd.DataFrame(simplified_growers)
         else:
-            st.error("No growers data found.")
+            st.toast("No growers data found.", icon="ℹ️")
             return pd.DataFrame()
     else:
-        st.error(f"Failed to retrieve growers: {response.status_code}")
+        st.toast(f"Failed to retrieve growers: {response.status_code}", icon="⚠️")
         return pd.DataFrame()
 
 # Step 3: Retrieve basic farms list for a grower
@@ -62,10 +62,10 @@ def get_farms(access_token, sync_id, grower_id):
         if isinstance(farms, list) and len(farms) > 0:
             return farms  # Return the raw list of farms for further detailed calls
         else:
-            st.error("No farms data found.")
+            st.toast("No farms data found.", icon="ℹ️")
             return []
     else:
-        st.error(f"Failed to retrieve farms: {response.status_code}")
+        st.toast(f"Failed to retrieve farms: {response.status_code}", icon="⚠️")
         return []
 
 # Step 4: Retrieve detailed information for each farm
@@ -87,7 +87,7 @@ def get_farm_details(access_token, sync_id, farm_id):
 
         return farm_info
     else:
-        st.error(f"Failed to retrieve farm details: {response.status_code}")
+        st.toast(f"Failed to retrieve farm details: {response.status_code}", icon="⚠️")
         return None
 
 # Step 5: Retrieve basic field list for a farm
@@ -103,10 +103,10 @@ def get_fields(access_token, sync_id, grower_id, farm_id):
         if isinstance(fields, list) and len(fields) > 0:
             return fields
         else:
-            st.error("No fields data found.")
+            st.toast("No fields data found.", icon="ℹ️")
             return []
     else:
-        st.error(f"Failed to retrieve fields: {response.status_code}")
+        st.toast(f"Failed to retrieve fields: {response.status_code}", icon="⚠️")
         return []
 
 # Step 6: Retrieve detailed information for each field
@@ -161,7 +161,7 @@ def get_field_details(access_token, sync_id, field_id):
 
         return field_info
     else:
-        st.error(f"Failed to retrieve field details: {response.status_code}")
+        st.toast(f"Failed to retrieve field details: {response.status_code}", icon="⚠️")
         return None
 
 # Main function
@@ -178,6 +178,10 @@ def main():
         st.session_state['grower_selected'] = None
     if 'fields_df' not in st.session_state:
         st.session_state['fields_df'] = None
+    if 'growers_fetched' not in st.session_state:
+        st.session_state['growers_fetched'] = False
+    if 'fields_fetched' not in st.session_state:
+        st.session_state['fields_fetched'] = False
 
     # Expander for Authorization
     with st.expander("Authorization"):
@@ -190,7 +194,7 @@ def main():
             access_token = get_access_token(client_id, client_secret, token_url, scope)
             if access_token:
                 st.session_state['access_token'] = access_token
-                st.success("Access token retrieved successfully!")
+                st.toast("Access token retrieved successfully!", icon="✅")
 
     # Only proceed if access token is available
     if st.session_state['access_token']:
@@ -199,18 +203,19 @@ def main():
         if st.button("Fetch Growers"):
             # Step 2: Get Growers
             st.session_state['growers_df'] = get_growers(st.session_state['access_token'], sync_id)
+            st.session_state['growers_fetched'] = True
             if not st.session_state['growers_df'].empty:
-                st.success("Growers retrieved successfully!")
+                st.toast("Growers retrieved successfully!", icon="✅")
 
         if st.session_state.get('growers_df') is not None and not st.session_state['growers_df'].empty:
             # Dropdown to select a grower by name
             grower_names = st.session_state['growers_df']["Name"].tolist()
             grower_id_map = dict(zip(st.session_state['growers_df']["Name"], st.session_state['growers_df']["ID"]))
             selected_grower = st.selectbox("Select a Grower", grower_names)
+            st.session_state['grower_selected'] = selected_grower
 
             if st.button("Get Fields"):
                 grower_id = grower_id_map[selected_grower]
-                st.session_state['grower_selected'] = selected_grower
                 # Now retrieve farms and fields
                 farms = get_farms(st.session_state['access_token'], sync_id, grower_id)
                 if farms:
@@ -241,9 +246,22 @@ def main():
                         if detailed_fields:
                             fields_df = pd.DataFrame(detailed_fields)
                             st.session_state['fields_df'] = fields_df
-                            st.success("Fields retrieved successfully!")
+                            st.session_state['fields_fetched'] = True
+                            st.toast("Fields retrieved successfully!", icon="✅")
+                        else:
+                            st.toast("No fields data found.", icon="ℹ️")
+                    else:
+                        st.toast("No farms found for the selected grower.", icon="ℹ️")
                 else:
-                    st.error("No farms found for the selected grower.")
+                    st.toast("No farms found for the selected grower.", icon="ℹ️")
+
+        # Display messages only after an attempt to fetch growers
+        if st.session_state['growers_fetched'] and (st.session_state.get('growers_df') is None or st.session_state['growers_df'].empty):
+            st.toast("No growers data available.", icon="ℹ️")
+
+        # Display messages only after an attempt to fetch fields
+        if st.session_state['fields_fetched'] and (st.session_state.get('fields_df') is None or st.session_state['fields_df'].empty):
+            st.toast("No fields data available.", icon="ℹ️")
 
         if st.session_state.get('fields_df') is not None and not st.session_state['fields_df'].empty:
             st.header(f"Fields for Grower: {st.session_state['grower_selected']}")
@@ -254,8 +272,8 @@ def main():
             from shapely.geometry import mapping
             import folium
             import tempfile
-            import zipfile
             import os
+            import zipfile
 
             fields_df = st.session_state['fields_df']
             # Explode the 'BoundaryWKTs' column into separate rows
@@ -278,11 +296,16 @@ def main():
             fields_df = fields_df.dropna(subset=['geometry'])
 
             if not fields_df.empty:
-                gdf = gpd.GeoDataFrame(fields_df, geometry='geometry', crs='EPSG:4326')
+                # Limit columns to necessary ones
+                gdf = gpd.GeoDataFrame(
+                    fields_df[['Name', 'Measure', 'FarmName', 'geometry']],
+                    geometry='geometry',
+                    crs='EPSG:4326'
+                )
 
                 # Expander for Fields Details
                 with st.expander("Fields Details"):
-                    st.dataframe(gdf[['Name', 'Measure', 'FarmName', 'BoundaryWKT']])
+                    st.dataframe(gdf[['Name', 'Measure', 'FarmName']])
 
                 # Now build the Grower Map inside an expander
                 with st.expander("Grower Map"):
@@ -310,13 +333,9 @@ def main():
                                 tooltip=folium.Tooltip(f"Name: {field_name}<br>Farm: {farm_name}<br>Measure: {measure}")
                             ).add_to(m)
 
-                        # Extract min and max for x and y from total_bounds
-                        minx, miny, maxx, maxy = gdf.total_bounds  # minx = min_longitude, miny = min_latitude
-
-                        # Create bounds in the format [[min_latitude, min_longitude], [max_latitude, max_longitude]]
-                        bounds = [[miny, minx], [maxy, maxx]]
-
-                        # Apply fit_bounds with the correct bounds
+                        # Fit map to bounds
+                        bounds = [[gdf.total_bounds[1], gdf.total_bounds[0]],
+                                  [gdf.total_bounds[3], gdf.total_bounds[2]]]
                         m.fit_bounds(bounds)
 
                         # Add layer control
@@ -327,28 +346,26 @@ def main():
                         map_height = 600  # Adjust as needed
                         html(map_html, width=1000, height=map_height)
 
-                        # Export Shapefile button
-                        if st.button("Download Grower Shapefile"):
-                            with tempfile.TemporaryDirectory() as tmpdir:
-                                # Write the shapefile to the temporary directory
-                                shapefile_path = os.path.join(tmpdir, "grower_shapefile.shp")
-                                gdf.to_file(shapefile_path, driver='ESRI Shapefile')
+                    # Export Shapefile button
+                    if st.button("Download Grower Shapefile"):
+                        with tempfile.TemporaryDirectory() as tmpdir:
+                            shapefile_path = os.path.join(tmpdir, "grower_data.shp")
+                            gdf.to_file(shapefile_path, driver='ESRI Shapefile')
 
-                                # Create a zip file of the shapefile
-                                zip_path = os.path.join(tmpdir, "grower_shapefile.zip")
-                                with zipfile.ZipFile(zip_path, 'w') as zipf:
-                                    for filename in os.listdir(tmpdir):
-                                        if filename.startswith("grower_shapefile"):
-                                            file_path = os.path.join(tmpdir, filename)
-                                            zipf.write(file_path, arcname=filename)
-                                # Read the zip file into memory
-                                with open(zip_path, 'rb') as f:
-                                    zip_data = f.read()
+                            # Create a zip file
+                            zip_path = os.path.join(tmpdir, "grower_data.zip")
+                            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                                for file_name in os.listdir(tmpdir):
+                                    if file_name.startswith("grower_data"):
+                                        file_path = os.path.join(tmpdir, file_name)
+                                        zipf.write(file_path, arcname=file_name)
 
+                            # Read the zip file and offer it for download
+                            with open(zip_path, 'rb') as f:
                                 st.download_button(
                                     label="Download Grower Shapefile",
-                                    data=zip_data,
-                                    file_name="grower_shapefile.zip",
+                                    data=f.read(),
+                                    file_name="grower_data.zip",
                                     mime="application/zip"
                                 )
 
@@ -373,9 +390,9 @@ def main():
                         ).add_to(field_map)
 
                         # Fit map to field bounds
-                        field_bounds = field_geom.bounds  # (minx, miny, maxx, maxy)
-                        bounds = [[field_bounds[1], field_bounds[0]], [field_bounds[3], field_bounds[2]]]
-                        field_map.fit_bounds(bounds)
+                        field_bounds = [[field_geom.bounds[1], field_geom.bounds[0]],
+                                        [field_geom.bounds[3], field_geom.bounds[2]]]
+                        field_map.fit_bounds(field_bounds)
 
                         # Display the map
                         field_map_html = field_map._repr_html_()
@@ -384,35 +401,35 @@ def main():
                         # Export Shapefile button
                         if st.button(f"Download Shapefile for {field_name}", key=f"download_button_{idx}"):
                             with tempfile.TemporaryDirectory() as tmpdir:
-                                # Write the shapefile to the temporary directory
-                                shapefile_gdf = gpd.GeoDataFrame([row], geometry='geometry', crs='EPSG:4326')
-                                shapefile_filename = f"{field_name.replace(' ', '_')}.shp"
-                                shapefile_path = os.path.join(tmpdir, shapefile_filename)
-                                shapefile_gdf.to_file(shapefile_path, driver='ESRI Shapefile')
-
-                                # Create a zip file of the shapefile
-                                zip_filename = f"{field_name.replace(' ', '_')}.zip"
-                                zip_path = os.path.join(tmpdir, zip_filename)
-                                with zipfile.ZipFile(zip_path, 'w') as zipf:
-                                    for filename in os.listdir(tmpdir):
-                                        if filename.startswith(field_name.replace(' ', '_')):
-                                            file_path = os.path.join(tmpdir, filename)
-                                            zipf.write(file_path, arcname=filename)
-                                # Read the zip file into memory
-                                with open(zip_path, 'rb') as f:
-                                    zip_data = f.read()
-
-                                st.download_button(
-                                    label="Download Shapefile",
-                                    data=zip_data,
-                                    file_name=zip_filename,
-                                    mime="application/zip",
-                                    key=f"download_shapefile_{idx}"
+                                shapefile_path = os.path.join(tmpdir, f"{field_name.replace(' ', '_')}.shp")
+                                field_gdf = gpd.GeoDataFrame(
+                                    [row[['Name', 'Measure', 'FarmName', 'geometry']]],
+                                    geometry='geometry',
+                                    crs='EPSG:4326'
                                 )
+                                field_gdf.to_file(shapefile_path, driver='ESRI Shapefile')
+
+                                # Create a zip file
+                                zip_path = os.path.join(tmpdir, f"{field_name.replace(' ', '_')}.zip")
+                                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                                    for file_name in os.listdir(tmpdir):
+                                        if file_name.startswith(field_name.replace(' ', '_')):
+                                            file_path = os.path.join(tmpdir, file_name)
+                                            zipf.write(file_path, arcname=file_name)
+
+                                # Read the zip file and offer it for download
+                                with open(zip_path, 'rb') as f:
+                                    st.download_button(
+                                        label="Download Shapefile",
+                                        data=f.read(),
+                                        file_name=f"{field_name.replace(' ', '_')}.zip",
+                                        mime="application/zip",
+                                        key=f"download_field_{idx}"
+                                    )
             else:
-                st.error("No valid field geometries to display.")
+                st.toast("No valid field geometries to display.", icon="ℹ️")
         else:
-            st.error("No fields data available.")
+            pass  # Do not display any message here to avoid premature messages
 
 if __name__ == "__main__":
     main()
