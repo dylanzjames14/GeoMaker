@@ -3,6 +3,7 @@ import folium
 from streamlit_folium import st_folium
 from folium.plugins import Draw
 from shapely.geometry import shape, mapping, Polygon
+from shapely.wkt import loads as load_wkt
 import json
 import tempfile
 from zipfile import ZipFile
@@ -70,19 +71,52 @@ def convert_geojson_to_kml(features, filename):
     return kml.kml()
 
 # Application title
-st.title("✏️ Draw a Field")
+st.title("✏️ Draw a Field or Upload WKT")
 
 # Instructions expander
 with st.expander("Click for instructions", expanded=False):
     st.markdown("""
-    **Objective:** Draw a field boundary and save its boundary file.
+    **Objective:** Draw a field boundary or upload a WKT file and save its boundary file.
 
-    1. Navigate to your field on the map.
-    2. Draw a field boundary using the map tools.
-    3. Click the appropriate button to save your drawn field boundary.
+    1. **Draw a Field**:
+        - Navigate to your field on the map.
+        - Use the drawing tools to draw your field boundary.
+        - Click "Save Boundary" to save your drawn boundary.
+
+    2. **Upload WKT**:
+        - Expand the "WKT Input" section below.
+        - Paste your WKT text into the text area.
+        - Click "Load to Map" to add the WKT polygon to the map.
+        - Click "Save Boundary" to save the uploaded boundary.
 
     💡 **Tip:** Utilize the field boundary in various applications within this tool.
     """)
+
+# WKT Input Section within an Expander
+with st.expander("WKT Input"):
+    st.markdown("**Example WKT Format:**")
+    st.code("POLYGON ((-97.069 36.126, -97.067 36.126, -97.067 36.125, -97.069 36.125, -97.069 36.126))")
+    wkt_input = st.text_area("Paste your WKT here:")
+    submit_wkt = st.button("Load to Map")
+
+    if submit_wkt and wkt_input:
+        # Handle WKT Input
+        try:
+            polygon_shape = load_wkt(wkt_input)
+            if not polygon_shape.is_valid or polygon_shape.is_empty:
+                st.error("Invalid WKT geometry.")
+            else:
+                geojson_geometry = mapping(polygon_shape)
+                geojson_feature = {
+                    "type": "Feature",
+                    "geometry": geojson_geometry,
+                    "properties": {}
+                }
+                # Add to saved geography
+                st.session_state.saved_geography = [geojson_feature]
+                st.success("WKT polygon added to the map!")
+        except Exception as e:
+            st.error(f"Error processing WKT: {e}")
 
 # Action buttons above the map
 # Use a container to group the buttons in a single row
@@ -166,8 +200,10 @@ if save_boundary:
         # Save the drawn features to session storage
         st.session_state.saved_geography = new_drawings
         st.success("Boundary saved and available for use throughout the application.")
+    elif st.session_state.saved_geography:
+        st.success("Boundary is already saved.")
     else:
-        st.warning("Please draw a polygon on the map before saving.")
+        st.warning("Please draw a polygon on the map or upload a WKT before saving.")
 
 # Handle Remove Boundary action
 if remove_boundary:
