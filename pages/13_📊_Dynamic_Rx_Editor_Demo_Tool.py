@@ -5,6 +5,8 @@ import matplotlib  # Ensure this is imported for colormap
 
 # Title and description
 st.title("🌾 Dynamic Fertilizer Rate Adjustment Tool")
+st.warning("⚠️ This page is currently a work in progress.")
+
 
 # Add an expander with explanation
 with st.expander("ℹ️ How This Tool Works"):
